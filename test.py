@@ -1,5 +1,6 @@
 from build import culll
 import numpy as np
+import time
 
 
 def npvec2int(L, base=10):
@@ -28,7 +29,7 @@ def cumult(a, b, base=10):
 
     c_out = np.zeros((B, N, M, nmax)).astype(np.uint32)
 
-    culll.bignummult(a, b, c_out, 0, 1, base)
+    culll.bignummult(a, b, c_out, 0, 0, base)
     return c_out
 
 
@@ -59,6 +60,30 @@ def test_mult():
     assert a * b == c, f"{a} * {b} != {c}"
 
 
+def benchmark_mult():
+
+    B, N, M, n = 10, 10, 10, 100
+
+    bef = time.time()
+
+    for _ in range(1000):
+        a = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
+        b = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
+        c = cumult(a, b, 10)
+
+    print("cuda time: ", time.time() - bef)
+
+    bef = time.time()
+    for _ in range(1000):
+        for _ in range(B * M * N):
+            a = np.random.randint(low=0, high=10, size=(n)).astype(np.uint32)
+            b = np.random.randint(low=0, high=10, size=(n)).astype(np.uint32)
+            c = npvec2int(a) * npvec2int(b)
+
+    print("numpy time: ", time.time() - bef)
+
+
 if __name__ == "__main__":
-    test_add()
-    test_mult()
+    # test_add()
+    # test_mult()
+    benchmark_mult()

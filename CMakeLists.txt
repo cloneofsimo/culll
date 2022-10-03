@@ -19,6 +19,8 @@ include_directories(
     ./extern/pybind11/include
     )
 
+include_directories(include)
+
 link_directories(
     /usr/local/cuda-11.4/lib64
     )

@@ -29,20 +29,22 @@ __global__ void batchLongTensorMult(
 
     for (int i = 0; i < n; i++)
     {
-        lint a = batched_data_a[pos + i];
-        lint b = batched_data_b[pos + i];
-        sum = a + b + overflow;
-        if (sum >= base)
-        {
-            overflow = 1;
-            sum %= base;
+        for (int j = 0; j < n - i; j++) {
+            lint a = batched_data_a[pos + i];
+            lint b = batched_data_b[pos + j];
+            sum = a * b + overflow;
+            if (sum >= base)
+            {
+                overflow = sum / base;
+                sum %= base;
+            }
+            else
+            {
+                overflow = 0;
+            }
+            //
+            output_data[pos + i + j] += sum;
         }
-        else
-        {
-            overflow = 0;
-        }
-        //
-        output_data[pos + i] = sum;
     }
 }
 
@@ -102,14 +104,17 @@ void batchLongTensorMultWrapper(
 
     }
 
+    // reshape hc
+
+
 
 
     int B, N, M, n;
 
-    B = ha.shape[0];
-    N = ha.shape[1];
-    M = ha.shape[2];
-    n = ha.shape[3];
+    B = hc.shape[0];
+    N = hc.shape[1];
+    M = hc.shape[2];
+    n = hc.shape[3];
 
     lint* gpu_ptr_a;
     lint* gpu_ptr_b;

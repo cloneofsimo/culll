@@ -9,7 +9,7 @@ using lint = unsigned int;
 
 
 __global__ void batchLongTensorAdd(
-  lint* batched_data_a, lint* batched_data_b, lint* output_data, lint B, lint N, lint M, lint n)
+  lint* batched_data_a, lint* batched_data_b, lint* output_data, lint B, lint N, lint M, lint n, lint base = 10)
 {
   // input form of B x N x M x n where
   // B is batch size
@@ -32,14 +32,16 @@ __global__ void batchLongTensorAdd(
     lint a = batched_data_a[pos + i];
     lint b = batched_data_b[pos + i];
     sum = a + b + overflow;
-    if (sum <= a)
+    if (sum >= base)
     {
       overflow = 1;
+      sum %= base;
     }
     else
     {
       overflow = 0;
     }
+    //
     output_data[pos + i] = sum;
   }
 }
@@ -47,7 +49,7 @@ __global__ void batchLongTensorAdd(
 
 
 void batchLongTensorAddWrapper(
-  pybind11::array_t<lint> batched_data_a, pybind11::array_t<lint> batched_data_b, pybind11::array_t<lint> output_data, lint B, lint N, lint M, lint n)
+  pybind11::array_t<lint> batched_data_a, pybind11::array_t<lint> batched_data_b, pybind11::array_t<lint> output_data, int base = 10)
 {
   pybind11::buffer_info ha = batched_data_a.request();
   pybind11::buffer_info hb = batched_data_b.request();
@@ -89,6 +91,13 @@ void batchLongTensorAddWrapper(
 
   std::cout << "ha size: " << ha.size * sizeof(lint) << std::endl;
 
+  int B, N, M, n;
+
+  B = ha.shape[0];
+  N = ha.shape[1];
+  M = ha.shape[2];
+  n = ha.shape[3];
+
   lint* gpu_ptr_a;
   lint* gpu_ptr_b;
   lint* gpu_ptr_c;
@@ -103,7 +112,7 @@ void batchLongTensorAddWrapper(
   dim3 dimBlock(1, 1, 1);
   dim3 dimGrid(B, N, M);
 
-  batchLongTensorAdd << <dimGrid, dimBlock >> > (gpu_ptr_a, gpu_ptr_b, gpu_ptr_c, B, n, N, M);
+  batchLongTensorAdd << <dimGrid, dimBlock >> > (gpu_ptr_a, gpu_ptr_b, gpu_ptr_c, B, N, M, n, base);
   lint* ptr = reinterpret_cast<lint*>(hc.ptr);
   gpuErrchk(cudaMemcpy(ptr, gpu_ptr_c, hc.size * sizeof(lint), cudaMemcpyDeviceToHost));
 

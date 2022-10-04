@@ -16,7 +16,7 @@ def cuadd(a, b, base=10):
 
     c_out = np.zeros((B, N, M, nmax)).astype(np.uint32)
 
-    culll.bignumadd(a, b, c_out, base)
+    culll.bignumadd(a, b, c_out, 0, 0, base)
     return c_out
 
 
@@ -83,7 +83,30 @@ def benchmark_mult():
     print("numpy time: ", time.time() - bef)
 
 
+def benchmark_add():
+
+    B, N, M, n = 10, 10, 10, 100
+
+    bef = time.time()
+
+    for _ in range(1000):
+        a = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
+        b = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
+        c = cuadd(a, b, 10)
+
+    print("cuda time: ", time.time() - bef)
+
+    bef = time.time()
+    for _ in range(1000):
+        for _ in range(B * M * N):
+            a = np.random.randint(low=0, high=10, size=(n)).astype(np.uint32)
+            b = np.random.randint(low=0, high=10, size=(n)).astype(np.uint32)
+            c = npvec2int(a) + npvec2int(b)
+
+    print("numpy time: ", time.time() - bef)
+
 if __name__ == "__main__":
     # test_add()
     # test_mult()
-    benchmark_mult()
+    #benchmark_mult()
+    benchmark_add()

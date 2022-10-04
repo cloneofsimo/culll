@@ -37,45 +37,10 @@ void batchLongTensorAddWrapper(pybind11::array_t<lint> batched_data_a,
                                pybind11::array_t<lint> batched_data_b,
                                pybind11::array_t<lint> output_data, int mode,
                                int verbose, int base = 10) {
+
     pybind11::buffer_info ha = batched_data_a.request();
     pybind11::buffer_info hb = batched_data_b.request();
     pybind11::buffer_info hc = output_data.request();
-
-    if (ha.ndim != 4) {
-        std::stringstream strstr;
-        strstr << "ha.ndim != 4" << std::endl;
-        strstr << "ha.ndim: " << ha.ndim << std::endl;
-        throw std::runtime_error(strstr.str());
-    }
-
-    if (hb.ndim != 4) {
-        std::stringstream strstr;
-        strstr << "hb.ndim != 4" << std::endl;
-        strstr << "hb.ndim: " << hb.ndim << std::endl;
-        throw std::runtime_error(strstr.str());
-    }
-
-    if (hc.ndim != 4) {
-        std::stringstream strstr;
-        strstr << "hc.ndim != 4" << std::endl;
-        strstr << "hc.ndim: " << hc.ndim << std::endl;
-        throw std::runtime_error(strstr.str());
-    }
-
-    if (verbose) {
-
-        std::cout << "ha.shape[0]: " << ha.shape[0] << std::endl;
-        std::cout << "ha.shape[1]: " << ha.shape[1] << std::endl;
-        std::cout << "ha.shape[2]: " << ha.shape[2] << std::endl;
-        std::cout << "ha.shape[3]: " << ha.shape[3] << std::endl;
-
-        std::cout << "hb.shape[0]: " << hb.shape[0] << std::endl;
-        std::cout << "hb.shape[1]: " << hb.shape[1] << std::endl;
-        std::cout << "hb.shape[2]: " << hb.shape[2] << std::endl;
-        std::cout << "hb.shape[3]: " << hb.shape[3] << std::endl;
-
-        std::cout << "ha size: " << ha.size * sizeof(lint) << std::endl;
-    }
 
     int B, N, M, n;
 
@@ -83,6 +48,12 @@ void batchLongTensorAddWrapper(pybind11::array_t<lint> batched_data_a,
     N = ha.shape[1];
     M = ha.shape[2];
     n = ha.shape[3];
+
+    threedim_checker(ha, "batched_data_a", verbose);
+    threedim_checker(hb, "batched_data_b", verbose, B, N, M);
+    threedim_checker(hc, "output_data", verbose, B, N, M);
+
+    
 
     lint *gpu_ptr_a;
     lint *gpu_ptr_b;
@@ -100,8 +71,8 @@ void batchLongTensorAddWrapper(pybind11::array_t<lint> batched_data_a,
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
 
-    batchLongTensorOffsetAdd<<<dimGrid, dimBlock>>>(gpu_ptr_a, gpu_ptr_b, gpu_ptr_c,
-                                              B, N, M, n, 0, 0, 0, n, base);
+    batchLongTensorOffsetAdd<<<dimGrid, dimBlock>>>(
+        gpu_ptr_a, gpu_ptr_b, gpu_ptr_c, B, N, M, n, 0, 0, 0, n, base);
     lint *ptr = reinterpret_cast<lint *>(hc.ptr);
     gpuErrchk(cudaMemcpy(ptr, gpu_ptr_c, hc.size * sizeof(lint),
                          cudaMemcpyDeviceToHost));

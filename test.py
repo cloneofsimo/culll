@@ -10,7 +10,7 @@ def npvec2int(L, base=10):
 
 def cuadd(a, b, base=10):
     B, N, M, _ = a.shape
-    nmax = 2 * max(a.shape[-1], b.shape[-1])
+    nmax = max(a.shape[-1], b.shape[-1]) + 1
     a = np.pad(a, ((0, 0), (0, 0), (0, 0), (0, nmax - a.shape[-1])), mode="constant")
     b = np.pad(b, ((0, 0), (0, 0), (0, 0), (0, nmax - b.shape[-1])), mode="constant")
 

@@ -47,7 +47,7 @@ def test_add():
 
 
 def test_mult():
-    B, N, M, n = 2, 2, 2, 100
+    B, N, M, n = 2, 2, 2, 4
     a = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
     b = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
 
@@ -107,6 +107,6 @@ def benchmark_add():
 
 if __name__ == "__main__":
     # test_add()
-    # test_mult()
+    test_mult()
     #benchmark_mult()
-    benchmark_add()
+    #benchmark_add()

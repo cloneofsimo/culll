@@ -13,6 +13,9 @@ __global__ void batchLongTensorOffsetMult(lint *batched_data_a,
                                           lint b_start, lint out_start,
                                           lint a_n, lint b_n, lint base);
 #pragma once
-__global__ void batchLongTensorAdd(lint *batched_data_a, lint *batched_data_b,
-                                   lint *output_data, lint B, lint N, lint M,
-                                   lint n, lint base);
+__global__ void batchLongTensorOffsetAdd(lint *batched_data_a,
+                                         lint *batched_data_b,
+                                         lint *output_data, lint B, lint N,
+                                         lint M, lint n, lint a_start,
+                                         lint b_start, lint out_start,
+                                         lint lens, lint base);

@@ -9,9 +9,15 @@ __global__ void batchLongTensorNegate(lint *batched_data_a, lint B, lint N,
     int col_idx = blockIdx.z * blockDim.z + threadIdx.z;
 
     int pos = batch_idx * N * M * n + row_idx * M * n + col_idx * n;
-
+    int overflow = 1;
     for (int i = 0; i < n; i++) {
-        batched_data_a[pos + i] = base - batched_data_a[pos + i];
+        batched_data_a[pos + i] = base - 1 - batched_data_a[pos + i] + overflow;
+        if (batched_data_a[pos + i] >= base) {
+            overflow = 1;
+            batched_data_a[pos + i] -= base;
+        } else {
+            overflow = 0;
+        }
     }
 }
 
@@ -30,7 +36,7 @@ void batchLongTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
     lint *gpu_ptr_a;
     gpuErrchk(cudaMalloc(&gpu_ptr_a, ha.size * sizeof(lint)));
     gpuErrchk(cudaMemcpy(gpu_ptr_a, ha.ptr, ha.size * sizeof(lint),
-                            cudaMemcpyHostToDevice));
+                         cudaMemcpyHostToDevice));
 
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);

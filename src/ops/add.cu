@@ -30,7 +30,7 @@ __global__ void batchLongTensorOffsetAdd(lint *batched_data_a,
         }
         output_data[pos + i + out_start] = sum;
     }
-    output_data[pos + lens + out_start] = overflow;
+    // output_data[pos + lens + out_start] = overflow;
 }
 
 void batchLongTensorAddWrapper(pybind11::array_t<lint> batched_data_a,
@@ -52,8 +52,6 @@ void batchLongTensorAddWrapper(pybind11::array_t<lint> batched_data_a,
     threedim_checker(ha, "batched_data_a", verbose);
     threedim_checker(hb, "batched_data_b", verbose, B, N, M);
     threedim_checker(hc, "output_data", verbose, B, N, M);
-
-    
 
     lint *gpu_ptr_a;
     lint *gpu_ptr_b;

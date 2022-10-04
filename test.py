@@ -10,7 +10,7 @@ def npvec2int(L, base=10):
 
 def cuadd(a, b, base=10):
     B, N, M, _ = a.shape
-    nmax = max(a.shape[-1], b.shape[-1]) + 1
+    nmax = 2 * max(a.shape[-1], b.shape[-1])
     a = np.pad(a, ((0, 0), (0, 0), (0, 0), (0, nmax - a.shape[-1])), mode="constant")
     b = np.pad(b, ((0, 0), (0, 0), (0, 0), (0, nmax - b.shape[-1])), mode="constant")
 
@@ -44,6 +44,7 @@ def test_add():
     c = npvec2int(c_out[0, 0, 0, :])
 
     assert a + b == c, f"{a} + {b} != {c}"
+    print("Add : Test passed")
 
 
 def test_mult():
@@ -59,10 +60,14 @@ def test_mult():
 
     assert a * b == c, f"{a} * {b} != {c}"
 
+    print("Mult : Test passed")
 
-def benchmark_mult():
 
-    B, N, M, n = 10, 10, 10, 100
+def benchmark_mult(X = 3):
+
+    print("Benchmarking multiplication")
+
+    B, N, M, n = X, X, X, 100
 
     bef = time.time()
 
@@ -83,9 +88,11 @@ def benchmark_mult():
     print("numpy time: ", time.time() - bef)
 
 
-def benchmark_add():
+def benchmark_add(X = 3):
 
-    B, N, M, n = 10, 10, 10, 100
+    print("Benchmarking addition")
+
+    B, N, M, n = X, X, X, 100
 
     bef = time.time()
 
@@ -106,7 +113,7 @@ def benchmark_add():
     print("numpy time: ", time.time() - bef)
 
 if __name__ == "__main__":
-    # test_add()
+    test_add()
     test_mult()
-    #benchmark_mult()
-    #benchmark_add()
+    benchmark_mult()
+    benchmark_add()

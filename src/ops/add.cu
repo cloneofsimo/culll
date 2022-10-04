@@ -1,10 +1,6 @@
 
 #include <gpu_utils.h>
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-using lint = unsigned int;
+#include <big_cuops.h>
 
 __global__ void batchLongTensorAdd(lint *batched_data_a, lint *batched_data_b,
                                    lint *output_data, lint B, lint N, lint M,

@@ -30,14 +30,15 @@ void batchLongTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
     lint *gpu_ptr_a;
     gpuErrchk(cudaMalloc(&gpu_ptr_a, ha.size * sizeof(lint)));
     gpuErrchk(cudaMemcpy(gpu_ptr_a, ha.ptr, ha.size * sizeof(lint),
+                            cudaMemcpyHostToDevice));
 
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
 
     batchLongTensorNegate<<<dimGrid, dimBlock>>>(gpu_ptr_a, B, N, M, n, base);
 
-    lint *ptr = reinterpret_cast<lint *>(hc.ptr);
-    gpuErrchk(cudaMemcpy(ptr, gpu_ptr_c, hc.size * sizeof(lint),
+    lint *ptr = reinterpret_cast<lint *>(ha.ptr);
+    gpuErrchk(cudaMemcpy(ptr, gpu_ptr_a, ha.size * sizeof(lint),
                          cudaMemcpyDeviceToHost));
 
     cudaFree(gpu_ptr_a);

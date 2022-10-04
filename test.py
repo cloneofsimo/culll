@@ -7,6 +7,13 @@ def npvec2int(L, base=10):
     # L = L.tolist()
     return sum([int(base**i) * int(L[i]) for i in range(len(L))])
 
+def npvec2signedint(L, base = 10):
+    if L[-1] >= base // 2:
+        L = L.tolist()
+        L = [int(base**i) * int(base - L[i]) for i in range(len(L))]
+        return -sum(L)
+    else:
+        return npvec2int(L, base)
 
 def cuadd(a, b, base=10):
     B, N, M, _ = a.shape
@@ -16,7 +23,7 @@ def cuadd(a, b, base=10):
 
     c_out = np.zeros((B, N, M, nmax)).astype(np.uint32)
 
-    culll.bignumadd(a, b, c_out, 0, 0, base)
+    culll.badd(a, b, c_out, 0, 0, base)
     return c_out
 
 
@@ -29,8 +36,23 @@ def cumult(a, b, base=10):
 
     c_out = np.zeros((B, N, M, nmax)).astype(np.uint32)
 
-    culll.bignummult(a, b, c_out, 0, 0, base)
+    culll.bmult(a, b, c_out, 0, 0, base)
     return c_out
+
+def cusubtract(a, b, base = 10):
+
+    B, N, M, _ = a.shape
+    nmax = max(a.shape[-1], b.shape[-1]) + 1
+    a = np.pad(a, ((0, 0), (0, 0), (0, 0), (0, nmax - a.shape[-1])), mode="constant")
+    b = np.pad(b, ((0, 0), (0, 0), (0, 0), (0, nmax - b.shape[-1])), mode="constant")
+
+    culll.bnegate(b, 0, 10)
+
+    c_out = np.zeros((B, N, M, nmax)).astype(np.uint32)
+
+    culll.badd(a, b, c_out, 0, 0, base)
+    return c_out
+
 
 
 def test_add():
@@ -61,6 +83,19 @@ def test_mult():
     assert a * b == c, f"{a} * {b} != {c}"
 
     print("Mult : Test passed")
+
+def test_sub():
+    B, N, M, n = 2, 2, 2, 4
+    a = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
+    b = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
+    c_out = cusubtract(a, b, 10)
+
+    a = npvec2signedint(a[0, 0, 0, :])
+    b = npvec2signedint(b[0, 0, 0, :])
+    c = npvec2signedint(c_out[0, 0, 0, :])
+
+    assert a - b == c, f"{a} - {b} != {c}, Supposed to be {a - b}"
+    print("Add : Test passed")
 
 
 def benchmark_mult(X = 3):
@@ -115,5 +150,6 @@ def benchmark_add(X = 3):
 if __name__ == "__main__":
     test_add()
     test_mult()
+    test_sub()
     benchmark_mult()
     benchmark_add()

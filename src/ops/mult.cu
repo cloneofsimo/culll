@@ -63,56 +63,17 @@ void batchLongTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
     pybind11::buffer_info hb = batched_data_b.request();
     pybind11::buffer_info hc = output_data.request();
 
-    if (ha.ndim != 4) {
-        std::stringstream strstr;
-        strstr << "ha.ndim != 4" << std::endl;
-        strstr << "ha.ndim: " << ha.ndim << std::endl;
-        throw std::runtime_error(strstr.str());
-    }
-
-    if (hb.ndim != 4) {
-        std::stringstream strstr;
-        strstr << "hb.ndim != 4" << std::endl;
-        strstr << "hb.ndim: " << hb.ndim << std::endl;
-        throw std::runtime_error(strstr.str());
-    }
-
-    if (hc.ndim != 4) {
-        std::stringstream strstr;
-        strstr << "hc.ndim != 4" << std::endl;
-        strstr << "hc.ndim: " << hc.ndim << std::endl;
-        throw std::runtime_error(strstr.str());
-    }
-
-    if (verbose) {
-
-        if (mode == 0) {
-            std::cout << "Using Unoptimized Mode" << std::endl;
-        } else {
-            std::cout << "Using Optimized Mode" << std::endl;
-        }
-
-        std::cout << "ha.shape[0]: " << ha.shape[0] << std::endl;
-        std::cout << "ha.shape[1]: " << ha.shape[1] << std::endl;
-        std::cout << "ha.shape[2]: " << ha.shape[2] << std::endl;
-        std::cout << "ha.shape[3]: " << ha.shape[3] << std::endl;
-
-        std::cout << "hb.shape[0]: " << hb.shape[0] << std::endl;
-        std::cout << "hb.shape[1]: " << hb.shape[1] << std::endl;
-        std::cout << "hb.shape[2]: " << hb.shape[2] << std::endl;
-        std::cout << "hb.shape[3]: " << hb.shape[3] << std::endl;
-
-        std::cout << "ha size: " << ha.size * sizeof(lint) << std::endl;
-    }
-
-    // reshape hc
-
     int B, N, M, n;
 
-    B = hc.shape[0];
-    N = hc.shape[1];
-    M = hc.shape[2];
-    n = hc.shape[3];
+    B = ha.shape[0];
+    N = ha.shape[1];
+    M = ha.shape[2];
+    n = ha.shape[3];
+
+    threedim_checker(ha, "batched_data_a", verbose);
+    threedim_checker(hb, "batched_data_b", verbose, B, N, M);
+    threedim_checker(hc, "output_data", verbose, B, N, M);
+    
     lint n_ = n / 2;
 
     lint *gpu_ptr_a;

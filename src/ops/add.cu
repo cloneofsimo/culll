@@ -30,7 +30,11 @@ __global__ void batchLongTensorOffsetAdd(lint *batched_data_a,
         }
         output_data[pos + i + out_start] = sum;
     }
-    // output_data[pos + lens + out_start] = overflow;
+    
+    if(lens + out_start < n){
+        output_data[pos + lens + out_start] = overflow;
+    }
+    //output_data[pos + lens + out_start] = overflow;
 }
 
 void batchLongTensorAddWrapper(pybind11::array_t<lint> batched_data_a,

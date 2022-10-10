@@ -10,12 +10,11 @@ Currently WIP.
 * CUDA optimized big-integer operations, including
     * 3 dimensional bigint Addition
     * 3 dimensional bigint Multiplication
-    * Negative number, arbitary base complement
+    * Negative number, arbitrary base complement
     * 3 dimensional bigint Subtraction
 
 
 ## TODO
-----
 
 - [ ] FFT multiplication
 - [ ] Add more tests

@@ -21,6 +21,23 @@ __global__ void batchLongTensorNegate(lint *batched_data_a, lint B, lint N,
     }
 }
 
+__global__ void batchDigitResize(lint *batched_data_a, lint *output, lint B, lint N, lint M, lint n, lint m){
+    int batch_idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int row_idx = blockIdx.y * blockDim.y + threadIdx.y;
+    int col_idx = blockIdx.z * blockDim.z + threadIdx.z;
+
+    int pos = batch_idx * N * M * n + row_idx * M * n + col_idx * n;
+    int pos_out = batch_idx * N * M * m + row_idx * M * m + col_idx * m;
+
+    for(int i = 0; i < m; i++){
+        if(i < n){
+            output[pos_out + i] = batched_data_a[pos + i];
+        }else{
+            output[pos_out + i] = 0;
+        }
+    }
+}
+
 void batchLongTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
                                   int verbose, int base = 10) {
     pybind11::buffer_info ha = batched_data_a.request();

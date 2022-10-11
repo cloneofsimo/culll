@@ -32,8 +32,8 @@ class BigTensor:
 
         _n = max(n, m)
 
-        b1 = self._resize(_n)
-        b2 = other._resize(_n)
+        b1 = self._resize(_n).data
+        b2 = other._resize(_n).data
         
         c_out = np.zeros((B, N, M, _n)).astype(np.uint32)
         culll.badd(b1, b2, c_out, 0, 0, self.base)
@@ -45,8 +45,8 @@ class BigTensor:
         B, N, M, n = self.shape
         B, N, M, m = other.shape
 
-        b1 = self._resize(n + m)
-        b2 = other._resize(n + m)
+        b1 = self._resize(n + m).data
+        b2 = other._resize(n + m).data
         
         c_out = np.zeros((B, N, M, n + m)).astype(np.uint32)
         culll.bmult(b1, b2, c_out, 0, 0, self.base)
@@ -59,15 +59,19 @@ class BigTensor:
         output = np.zeros((B, N, M, m)).astype(np.uint32)
         culll.bdigit_resize(self.data, output, 0, self.base)
 
-        return output
+        return BigTensor(output, self.base)
 
     def __neg__(self):
 
         B, N, M, n = self.shape
-        output = np.zeros((B, N, M, n)).astype(np.uint32)
-        culll.bnegate(self.data, output, 0, self.base)
+        _self = self.data.copy()
 
-        return BigTensor(output, self.base)
+        culll.bnegate(_self, 0, self.base)
+
+        return BigTensor(_self, self.base)
+
+    def __sub__(self, other):
+        return self + (-other)
 
     def at(self,x1, x2, x3):
         return npvec2signedint(self.data[x1, x2, x3, :])
@@ -126,21 +130,30 @@ def test_signed_overall():
     b = BigTensor(b)
     c = BigTensor(c)
 
+    a_at0 = a.at(0, 0, 0)
+    b_at0 = b.at(0, 0, 0)
+    c_at0 = c.at(0, 0, 0)
+    print(a_at0, b_at0, c_at0)
+    
+
+    a = a._resize(20)
+    b = b._resize(20)
+    c = c._resize(20)
 
     a_at0 = a.at(0, 0, 0)
     b_at0 = b.at(0, 0, 0)
     c_at0 = c.at(0, 0, 0)
 
-    # 
+    print(a_at0, b_at0, c_at0)
 
-    f1 = lambda x, y: (x + y - x - y - y) * y * y
+    f1 = lambda x, y: x + y - x - y + x + x
     f2 = lambda x, y: y * x + x * x - y + x
     f3 = lambda x, y, z : x * x * x - y * y * y - z * z * z
 
-    assert f1(a_at0, b_at0) == f1(a, b).at(0, 0, 0)
+    assert f1(a_at0, b_at0) == f1(a, b).at(0, 0, 0), print(f"{f1(a_at0, b_at0)} != {f1(a, b).at(0, 0, 0)}")
     assert f2(a_at0, b_at0) == f2(a, b).at(0, 0, 0)
     assert f3(a_at0, b_at0, c_at0) == f3(a, b, c).at(0, 0, 0)
 
 if __name__ == "__main__":
     
-    test_unsigned_overall()
+    test_signed_overall()

@@ -34,11 +34,14 @@ __global__ void batchLongTensorDigitResize(lint *batched_data_a, lint *output, l
     for(int i = 0; i < n1 - 1; i++){
         output[pos_out + i] = batched_data_a[pos + i];
     }
-    for(int i = n1 - 1; i < n2; i++){
+    output[pos_out + n1 - 1] = batched_data_a[pos + n1 - 1];
+
+    for(int i = n1; i < n2; i++){
         output[pos_out + i] = fills;
     }
-    output[pos_out + n2 - 1] = batched_data_a[pos + n1 - 1];
 }
+
+//__global__ void 
 
 void batchLongTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
                                   int verbose, int base = 10) {

@@ -69,6 +69,10 @@ __global__ void batchLongTensorOffsetAdd(lint *batched_data_a,
 __global__ void batchLongTensorNegate(lint *batched_data_a, lint B, lint N,
                                       lint M, lint n, lint base);
 
+#pragma once
+__global__ void batchLongTensorDigitResize(lint *batched_data_a, lint *output, lint B, lint N, lint M, lint n1, lint n2);
+
+
 // #pragma once
 // void batchLongTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
 //                                   int verbose, int base);

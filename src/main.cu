@@ -19,4 +19,5 @@ PYBIND11_MODULE(culll, m)
   m.def("badd", batchLongTensorAddWrapper);
   m.def("bmult", batchLongTensorMultWrapper);
   m.def("bnegate", batchLongTensorNegateWrapper);
+  m.def("bdigit_resize", batchLongTensorDigitResizeWrapper);
 }

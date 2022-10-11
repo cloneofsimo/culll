@@ -63,18 +63,19 @@ void batchLongTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
     pybind11::buffer_info hb = batched_data_b.request();
     pybind11::buffer_info hc = output_data.request();
 
-    int B, N, M, n;
+    int B, N, M, n1, n2, n3;
 
     B = ha.shape[0];
     N = ha.shape[1];
     M = ha.shape[2];
-    n = ha.shape[3];
+    n1 = ha.shape[3];
+    n2 = hb.shape[3];
+    n3 = hc.shape[3];
 
     threedim_checker(ha, "batched_data_a", verbose);
     threedim_checker(hb, "batched_data_b", verbose, B, N, M);
     threedim_checker(hc, "output_data", verbose, B, N, M);
     
-    lint n_ = n / 2;
 
     lint *gpu_ptr_a;
     lint *gpu_ptr_b;
@@ -93,7 +94,7 @@ void batchLongTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
     dim3 dimGrid(B, N, M);
     if (mode == 0) {
         batchLongTensorOffsetMult<<<dimGrid, dimBlock>>>(
-            gpu_ptr_a, gpu_ptr_b, gpu_ptr_c, B, N, M, n, 0, 0, 0, n_, n_, base);
+            gpu_ptr_a, gpu_ptr_b, gpu_ptr_c, B, N, M, n3, 0, 0, 0, n1, n2, base);
     } else {
         std::cout << "Not implemented yet" << std::endl;
     }

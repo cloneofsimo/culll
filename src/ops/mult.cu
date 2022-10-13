@@ -13,7 +13,7 @@
 /// case, typically lens <= n / 2.
 /// @param base
 /// @return
-__global__ void batchLongTensorOffsetMult(lint *batched_data_a,
+__global__ void batchBigTensorKernelOffsetMult(lint *batched_data_a,
                                           lint *batched_data_b,
                                           lint *output_data, lint B, lint N,
                                           lint M, lint n, lint a_start,
@@ -55,7 +55,9 @@ __global__ void batchLongTensorOffsetMult(lint *batched_data_a,
     }
 }
 
-void batchLongTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
+
+
+void batchBigTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
                                 pybind11::array_t<lint> batched_data_b,
                                 pybind11::array_t<lint> output_data,
                                 int mode = 1, int verbose = 0, int base = 10) {
@@ -93,7 +95,7 @@ void batchLongTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
     if (mode == 0) {
-        batchLongTensorOffsetMult<<<dimGrid, dimBlock>>>(
+        batchBigTensorKernelOffsetMult<<<dimGrid, dimBlock>>>(
             gpu_ptr_a, gpu_ptr_b, gpu_ptr_c, B, N, M, n3, 0, 0, 0, n1, n2, base);
     } else {
         std::cout << "Not implemented yet" << std::endl;

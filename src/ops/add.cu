@@ -2,7 +2,7 @@
 #include <big_cuops.h>
 #include <gpu_utils.h>
 
-__global__ void batchLongTensorOffsetAdd(lint *batched_data_a,
+__global__ void batchBigTensorKernelOffsetAdd(lint *batched_data_a,
                                          lint *batched_data_b,
                                          lint *output_data, lint B, lint N,
                                          lint M, lint n, lint a_start,
@@ -37,7 +37,7 @@ __global__ void batchLongTensorOffsetAdd(lint *batched_data_a,
     //output_data[pos + lens + out_start] = overflow;
 }
 
-void batchLongTensorAddWrapper(pybind11::array_t<lint> batched_data_a,
+void batchBigTensorAddWrapper(pybind11::array_t<lint> batched_data_a,
                                pybind11::array_t<lint> batched_data_b,
                                pybind11::array_t<lint> output_data, int mode,
                                int verbose, int base = 10) {
@@ -73,7 +73,7 @@ void batchLongTensorAddWrapper(pybind11::array_t<lint> batched_data_a,
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
 
-    batchLongTensorOffsetAdd<<<dimGrid, dimBlock>>>(
+    batchBigTensorKernelOffsetAdd<<<dimGrid, dimBlock>>>(
         gpu_ptr_a, gpu_ptr_b, gpu_ptr_c, B, N, M, n, 0, 0, 0, n, base);
     lint *ptr = reinterpret_cast<lint *>(hc.ptr);
     gpuErrchk(cudaMemcpy(ptr, gpu_ptr_c, hc.size * sizeof(lint),

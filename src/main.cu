@@ -16,8 +16,8 @@ using lint = unsigned int;
 
 PYBIND11_MODULE(culll, m)
 {
-  m.def("badd", batchLongTensorAddWrapper);
-  m.def("bmult", batchLongTensorMultWrapper);
-  m.def("bnegate", batchLongTensorNegateWrapper);
-  m.def("bdigit_resize", batchLongTensorDigitResizeWrapper);
+  m.def("badd", batchBigTensorAddWrapper);
+  m.def("bmult", batchBigTensorMultWrapper);
+  m.def("bnegate", batchBigTensorNegateWrapper);
+  m.def("bdigit_resize", batchBigTensorDigitResizeWrapper);
 }

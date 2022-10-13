@@ -31,7 +31,7 @@ void batchKaratsuba(lint* batch_x, lint* batch_y, lint* batch_out, lint B,
         dim3 dimBlock(1, 1, 1);
         dim3 dimGrid(B, N, M);
 
-        batchLongTensorOffsetMult << <dimGrid, dimBlock >> > (
+        batchBigTensorKernelOffsetMult << <dimGrid, dimBlock >> > (
             batch_x, batch_y, batch_out, B, N, M, n, a_start0, b_start,
             out_start, a_len, b_len, base);
 
@@ -65,11 +65,11 @@ void batchKaratsuba(lint* batch_x, lint* batch_y, lint* batch_out, lint B,
             b_start, 0, n_lower, n_lower, base);
 
         // a + b
-        batchLongTensorOffsetAdd(batch_x, batch_x, a_plus_b, B, N, M, n,
+        batchBigTensorKernelOffsetAdd(batch_x, batch_x, a_plus_b, B, N, M, n,
             a_start + n_lower, a_start, 0, n_upper, base);
 
         // c + d
-        batchLongTensorOffsetAdd(batch_y, batch_y, c_plus_d, B, N, M, n,
+        batchBigTensorKernelOffsetAdd(batch_y, batch_y, c_plus_d, B, N, M, n,
             b_start + n_lower, b_start, 0, n_lower, base);
 
         // (a + b) * (c + d)
@@ -77,14 +77,14 @@ void batchKaratsuba(lint* batch_x, lint* batch_y, lint* batch_out, lint B,
             n, n, base);
 
         // negate ac, bd
-        batchLongTensorNegate(ac, B, N, M, n, base);
-        batchLongTensorNegate(bd, B, N, M, n, base);
+        batchBigTensorKernelNegate(ac, B, N, M, n, base);
+        batchBigTensorKernelNegate(bd, B, N, M, n, base);
 
         // ad_plus_bc = (a + b) * (c + d) - ac - bd
-        batchLongTensorOffsetAdd(ad_plus_bc, ac, ad_plus_bc, B, N, M, n, 0, 0, 0,
+        batchBigTensorKernelOffsetAdd(ad_plus_bc, ac, ad_plus_bc, B, N, M, n, 0, 0, 0,
             n, n, base);
 
-        batchLongTensorOffsetAdd(ad_plus_bc, bd, ad_plus_bc, B, N, M, n, 0, 0, 0,
+        batchBigTensorKernelOffsetAdd(ad_plus_bc, bd, ad_plus_bc, B, N, M, n, 0, 0, 0,
             n, n, base);
 
         // TODO : Make simpler operations... By refactoring mat, add in class-driven ways...

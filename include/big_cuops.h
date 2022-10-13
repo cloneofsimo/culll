@@ -41,14 +41,14 @@ void threedim_checker(pybind11::buffer_info &ha, std::string name = "a",
 }
 
 #pragma once
-__global__ void batchLongTensorOffsetMult(lint *batched_data_a,
+__global__ void batchBigTensorKernelOffsetMult(lint *batched_data_a,
                                           lint *batched_data_b,
                                           lint *output_data, lint B, lint N,
                                           lint M, lint n, lint a_start,
                                           lint b_start, lint out_start,
                                           lint a_n, lint b_n, lint base);
 #pragma once
-__global__ void batchLongTensorOffsetAdd(lint *batched_data_a,
+__global__ void batchBigTensorKernelOffsetAdd(lint *batched_data_a,
                                          lint *batched_data_b,
                                          lint *output_data, lint B, lint N,
                                          lint M, lint n, lint a_start,
@@ -57,7 +57,7 @@ __global__ void batchLongTensorOffsetAdd(lint *batched_data_a,
 
 // TODO: Implement this in the future for fused operation.
 // #pragma once
-// __global__ void batchLongTensorOffsetSubtract(lint *batched_data_a,
+// __global__ void batchBigTensorKernelOffsetSubtract(lint *batched_data_a,
 //                                               lint *batched_data_b,
 //                                               lint *output_data, lint B, lint
 //                                               N, lint M, lint n, lint
@@ -66,25 +66,9 @@ __global__ void batchLongTensorOffsetAdd(lint *batched_data_a,
 //                                               base);
 
 #pragma once
-__global__ void batchLongTensorNegate(lint *batched_data_a, lint B, lint N,
+__global__ void batchBigTensorKernelNegate(lint *batched_data_a, lint B, lint N,
                                       lint M, lint n, lint base);
 
 #pragma once
-__global__ void batchLongTensorDigitResize(lint *batched_data_a, lint *output, lint B, lint N, lint M, lint n1, lint n2);
+__global__ void batchBigTensorKernelDigitResize(lint *batched_data_a, lint *output, lint B, lint N, lint M, lint n1, lint n2);
 
-
-// #pragma once
-// void batchLongTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
-//                                   int verbose, int base);
-
-// #pragma once
-// void batchLongTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
-//                                 pybind11::array_t<lint> batched_data_b,
-//                                 pybind11::array_t<lint> output_data, int mode,
-//                                 int verbose, int base);
-
-// #pragma once
-// void batchLongTensorAddWrapper(pybind11::array_t<lint> batched_data_a,
-//                                pybind11::array_t<lint> batched_data_b,
-//                                pybind11::array_t<lint> output_data, int mode,
-//                                int verbose, int base);

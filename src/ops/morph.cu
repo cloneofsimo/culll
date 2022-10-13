@@ -2,7 +2,7 @@
 #include <big_cuops.h>
 #include <gpu_utils.h>
 
-__global__ void batchLongTensorNegate(lint *batched_data_a, lint B, lint N,
+__global__ void batchBigTensorKernelNegate(lint *batched_data_a, lint B, lint N,
                                       lint M, lint n, lint base) {
     int batch_idx = blockIdx.x * blockDim.x + threadIdx.x;
     int row_idx = blockIdx.y * blockDim.y + threadIdx.y;
@@ -21,7 +21,7 @@ __global__ void batchLongTensorNegate(lint *batched_data_a, lint B, lint N,
     }
 }
 
-__global__ void batchLongTensorDigitResize(lint *batched_data_a, lint *output, lint B, lint N, lint M, lint n1, lint n2, lint base){
+__global__ void batchBigTensorKernelDigitResize(lint *batched_data_a, lint *output, lint B, lint N, lint M, lint n1, lint n2, lint base){
     int batch_idx = blockIdx.x * blockDim.x + threadIdx.x;
     int row_idx = blockIdx.y * blockDim.y + threadIdx.y;
     int col_idx = blockIdx.z * blockDim.z + threadIdx.z;
@@ -43,7 +43,7 @@ __global__ void batchLongTensorDigitResize(lint *batched_data_a, lint *output, l
 
 //__global__ void 
 
-void batchLongTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
+void batchBigTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
                                   int verbose, int base = 10) {
     pybind11::buffer_info ha = batched_data_a.request();
     int B, N, M, n;
@@ -63,7 +63,7 @@ void batchLongTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
 
-    batchLongTensorNegate<<<dimGrid, dimBlock>>>(gpu_ptr_a, B, N, M, n, base);
+    batchBigTensorKernelNegate<<<dimGrid, dimBlock>>>(gpu_ptr_a, B, N, M, n, base);
 
     lint *ptr = reinterpret_cast<lint *>(ha.ptr);
     gpuErrchk(cudaMemcpy(ptr, gpu_ptr_a, ha.size * sizeof(lint),
@@ -74,7 +74,7 @@ void batchLongTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
 
 
 
-void batchLongTensorDigitResizeWrapper(pybind11::array_t<lint> batched_data_a, pybind11::array_t<lint> batched_data_b,
+void batchBigTensorDigitResizeWrapper(pybind11::array_t<lint> batched_data_a, pybind11::array_t<lint> batched_data_b,
                                   int verbose, int base = 10) {
     pybind11::buffer_info ha = batched_data_a.request();
     pybind11::buffer_info hb = batched_data_b.request();
@@ -107,7 +107,7 @@ void batchLongTensorDigitResizeWrapper(pybind11::array_t<lint> batched_data_a, p
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
 
-    batchLongTensorDigitResize<<<dimGrid, dimBlock>>>(gpu_ptr_a, gpu_ptr_b, B, N, M, n1, n2, base);
+    batchBigTensorKernelDigitResize<<<dimGrid, dimBlock>>>(gpu_ptr_a, gpu_ptr_b, B, N, M, n1, n2, base);
 
     lint *ptr = reinterpret_cast<lint *>(hb.ptr);
     gpuErrchk(cudaMemcpy(ptr, gpu_ptr_b, hb.size * sizeof(lint),

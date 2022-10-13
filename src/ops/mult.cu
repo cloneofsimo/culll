@@ -56,6 +56,55 @@ __global__ void batchBigTensorKernelOffsetMult(lint *batched_data_a,
 }
 
 
+void batchBigTensorMult(int B, int N, int M, int n1, int n2, int n3, lint *data_a,lint *data_b, lint *data_c, int i_to_gpu = 1, int o_to_cpu = 1){
+    
+    lint *gpu_ptr_a;
+    lint *gpu_ptr_b;
+    lint *gpu_ptr_c;
+
+    int data_a_size = B * N * M * n1;
+    int data_b_size = B * N * M * n2;
+    int data_c_size = B * N * M * n3;
+    
+    if(i_to_gpu){
+        gpuErrchk(cudaMalloc(&gpu_ptr_a, data_a_size * sizeof(lint)));
+        gpuErrchk(cudaMalloc(&gpu_ptr_b, data_b_size * sizeof(lint)));
+        gpuErrchk(cudaMalloc(&gpu_ptr_c, data_c_size * sizeof(lint)));
+
+        gpuErrchk(cudaMemcpy(gpu_ptr_a, ha.ptr, data_a_size * sizeof(lint),
+                            cudaMemcpyHostToDevice));
+        gpuErrchk(cudaMemcpy(gpu_ptr_b, hb.ptr, data_b_size * sizeof(lint),
+                            cudaMemcpyHostToDevice));
+    }
+    else{
+        // assume that given pointers are on gpu.
+        gpu_ptr_a = data_a;
+        gpu_ptr_b = data_b;
+        gpu_ptr_c = data_c;
+    }
+
+
+    dim3 dimBlock(1, 1, 1);
+    dim3 dimGrid(B, N, M);
+    if (mode == 0) {
+        batchBigTensorKernelOffsetMult<<<dimGrid, dimBlock>>>(
+            gpu_ptr_a, gpu_ptr_b, gpu_ptr_c, B, N, M, n3, 0, 0, 0, n1, n2, base);
+    } else {
+        std::cout << "Not implemented yet" << std::endl;
+    }
+
+    if(o_to_cpu){
+        lint *output = new lint[data_c_size];
+        gpuErrchk(cudaMemcpy(output, gpu_ptr_c, B * N * M * n3 * sizeof(lint),
+                            cudaMemcpyDeviceToHost));
+        cudaFree(gpu_ptr_a);
+        cudaFree(gpu_ptr_b);
+        cudaFree(gpu_ptr_c);
+        data_c = output;
+    }
+}
+
+
 
 void batchBigTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
                                 pybind11::array_t<lint> batched_data_b,
@@ -78,34 +127,12 @@ void batchBigTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
     threedim_checker(hb, "batched_data_b", verbose, B, N, M);
     threedim_checker(hc, "output_data", verbose, B, N, M);
     
+    lint *data_a = (lint *)ha.ptr;
+    lint *data_b = (lint *)hb.ptr;
+    lint *data_c = (lint *)hc.ptr;
 
-    lint *gpu_ptr_a;
-    lint *gpu_ptr_b;
-    lint *gpu_ptr_c;
+    batchBigTensorMult(B, N, M, n1, n2, n3, data_a, data_b, data_c, 1, 1);
 
-    gpuErrchk(cudaMalloc(&gpu_ptr_a, ha.size * sizeof(lint)));
-    gpuErrchk(cudaMalloc(&gpu_ptr_b, hb.size * sizeof(lint)));
-    gpuErrchk(cudaMalloc(&gpu_ptr_c, hc.size * sizeof(lint)));
-
-    gpuErrchk(cudaMemcpy(gpu_ptr_a, ha.ptr, ha.size * sizeof(lint),
-                         cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy(gpu_ptr_b, hb.ptr, hb.size * sizeof(lint),
-                         cudaMemcpyHostToDevice));
-
-    dim3 dimBlock(1, 1, 1);
-    dim3 dimGrid(B, N, M);
-    if (mode == 0) {
-        batchBigTensorKernelOffsetMult<<<dimGrid, dimBlock>>>(
-            gpu_ptr_a, gpu_ptr_b, gpu_ptr_c, B, N, M, n3, 0, 0, 0, n1, n2, base);
-    } else {
-        std::cout << "Not implemented yet" << std::endl;
-    }
-
-    lint *ptr = reinterpret_cast<lint *>(hc.ptr);
-    gpuErrchk(cudaMemcpy(ptr, gpu_ptr_c, hc.size * sizeof(lint),
-                         cudaMemcpyDeviceToHost));
-
-    cudaFree(gpu_ptr_a);
-    cudaFree(gpu_ptr_b);
-    cudaFree(gpu_ptr_c);
+    // now data are in data_c. push it to output_data
+    lint *ptr = (lint *)hc.ptr;
 }

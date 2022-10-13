@@ -89,26 +89,21 @@ def test_orth():
     n = 100
     d = 99
 
-    # getcontext().prec = 100
-
     Q = [[Decimal(random.randrange(0, 100)) for _ in range(n)] for _ in range(d)]
-
     Q, _ = gram_schmit_naive(Q)
 
     for i in range(d):
         for j in range(i):
             assert (
-                abs(sum([Q[i][k] * Q[j][k] for k in range(n)])) < 1e-50
-            ), f"i = {i}, j = {j}, inner product = {sum([Q[i][k] * Q[j][k] for k in range(n)])}"
+                abs(_inner_prdt(Q[i], Q[j])) < 1e-50
+            ), f"i = {i}, j = {j}, inner product = {_inner_prdt(Q[i], Q[j])}"
 
 
 def generate_bignum(n):
     # generate a bignum
     bignum = 0
     for i in range(n):
-        randnum = random.random() * pow(2, 32)
-        randnum = int(randnum)
-
+        randnum = int(random.random() * pow(2, 32))
         bignum += randnum * 2 ** (32 * i)
 
     return bignum

@@ -152,5 +152,5 @@ def test_signed_overall():
 
 
 if __name__ == "__main__":
-
+    test_unsigned_overall()
     test_signed_overall()

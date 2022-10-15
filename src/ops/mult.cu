@@ -56,7 +56,7 @@ __global__ void batchBigTensorKernelOffsetMult(lint *batched_data_a,
 }
 
 
-void batchBigTensorMult(int B, int N, int M, int n1, int n2, int n3, lint *data_a,lint *data_b, lint *data_c, int i_to_gpu = 1, int o_to_cpu = 1){
+void batchBigTensorMult(int B, int N, int M, int n1, int n2, int n3, lint *data_a,lint *data_b, lint *data_c, int base = 10, int i_to_gpu = 1, int o_to_cpu = 1, int mode = 0){
     
     lint *gpu_ptr_a;
     lint *gpu_ptr_b;
@@ -71,9 +71,9 @@ void batchBigTensorMult(int B, int N, int M, int n1, int n2, int n3, lint *data_
         gpuErrchk(cudaMalloc(&gpu_ptr_b, data_b_size * sizeof(lint)));
         gpuErrchk(cudaMalloc(&gpu_ptr_c, data_c_size * sizeof(lint)));
 
-        gpuErrchk(cudaMemcpy(gpu_ptr_a, ha.ptr, data_a_size * sizeof(lint),
+        gpuErrchk(cudaMemcpy(gpu_ptr_a, data_a, data_a_size * sizeof(lint),
                             cudaMemcpyHostToDevice));
-        gpuErrchk(cudaMemcpy(gpu_ptr_b, hb.ptr, data_b_size * sizeof(lint),
+        gpuErrchk(cudaMemcpy(gpu_ptr_b, data_b, data_b_size * sizeof(lint),
                             cudaMemcpyHostToDevice));
     }
     else{
@@ -94,13 +94,13 @@ void batchBigTensorMult(int B, int N, int M, int n1, int n2, int n3, lint *data_
     }
 
     if(o_to_cpu){
-        lint *output = new lint[data_c_size];
-        gpuErrchk(cudaMemcpy(output, gpu_ptr_c, B * N * M * n3 * sizeof(lint),
+        
+        gpuErrchk(cudaMemcpy(data_c, gpu_ptr_c, data_c_size * sizeof(lint),
                             cudaMemcpyDeviceToHost));
         cudaFree(gpu_ptr_a);
         cudaFree(gpu_ptr_b);
         cudaFree(gpu_ptr_c);
-        data_c = output;
+        
     }
 }
 
@@ -131,8 +131,6 @@ void batchBigTensorMultWrapper(pybind11::array_t<lint> batched_data_a,
     lint *data_b = (lint *)hb.ptr;
     lint *data_c = (lint *)hc.ptr;
 
-    batchBigTensorMult(B, N, M, n1, n2, n3, data_a, data_b, data_c, 1, 1);
-
-    // now data are in data_c. push it to output_data
-    lint *ptr = (lint *)hc.ptr;
+    batchBigTensorMult(B, N, M, n1, n2, n3, data_a, data_b, data_c, 10, 1, 1, 0);
+    
 }

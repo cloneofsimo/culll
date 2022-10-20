@@ -7,9 +7,9 @@
 using lint = unsigned int;
 
 #pragma once
-void threedim_checker(pybind11::buffer_info &ha, std::string name = "a",
-                      int verbose = 0, int dim0 = -1, int dim1 = -1,
-                      int dim2 = -1) {
+void threedim_checker(pybind11::buffer_info& ha, std::string name = "a",
+    int verbose = 0, int dim0 = -1, int dim1 = -1,
+    int dim2 = -1) {
 
     if (ha.ndim != 4) {
         std::stringstream strstr;
@@ -18,15 +18,15 @@ void threedim_checker(pybind11::buffer_info &ha, std::string name = "a",
         throw std::runtime_error(strstr.str());
     }
 
-    int dim3[3] = {dim0, dim1, dim2};
+    int dim3[3] = { dim0, dim1, dim2 };
     for (int i = 0; i < 3; i++) {
         if (dim3[i] != -1) {
             if (ha.shape[i] != dim3[i]) {
                 std::stringstream strstr;
                 strstr << name << ".shape[" << i << "] != " << dim3[i]
-                       << std::endl;
+                    << std::endl;
                 strstr << name << ".shape[" << i << "]: " << ha.shape[i]
-                       << std::endl;
+                    << std::endl;
                 throw std::runtime_error(strstr.str());
             }
         }
@@ -41,19 +41,20 @@ void threedim_checker(pybind11::buffer_info &ha, std::string name = "a",
 }
 
 #pragma once
-__global__ void batchBigTensorKernelOffsetMult(lint *batched_data_a,
-                                          lint *batched_data_b,
-                                          lint *output_data, lint B, lint N,
-                                          lint M, lint n, lint a_start,
-                                          lint b_start, lint out_start,
-                                          lint a_n, lint b_n, lint base);
+__global__ void batchBigTensorKernelOffsetMult(lint* batched_data_a,
+    lint* batched_data_b,
+    lint* output_data, lint B, lint N,
+    lint M, lint n, lint a_start,
+    lint b_start, lint out_start,
+    lint a_n, lint b_n, lint base);
+
 #pragma once
-__global__ void batchBigTensorKernelOffsetAdd(lint *batched_data_a,
-                                         lint *batched_data_b,
-                                         lint *output_data, lint B, lint N,
-                                         lint M, lint n, lint a_start,
-                                         lint b_start, lint out_start,
-                                         lint lens, lint base);
+__global__ void batchBigTensorKernelOffsetAdd(lint* batched_data_a,
+    lint* batched_data_b,
+    lint* output_data, lint B, lint N,
+    lint M, lint n, lint a_start,
+    lint b_start, lint out_start,
+    lint lens, lint base);
 
 // TODO: Implement this in the future for fused operation.
 // #pragma once
@@ -66,9 +67,9 @@ __global__ void batchBigTensorKernelOffsetAdd(lint *batched_data_a,
 //                                               base);
 
 #pragma once
-__global__ void batchBigTensorKernelNegate(lint *batched_data_a, lint B, lint N,
-                                      lint M, lint n, lint base);
+__global__ void batchBigTensorKernelNegate(lint* batched_data_a, lint B, lint N,
+    lint M, lint n, lint base);
 
 #pragma once
-__global__ void batchBigTensorKernelDigitResize(lint *batched_data_a, lint *output, lint B, lint N, lint M, lint n1, lint n2);
+__global__ void batchBigTensorKernelDigitResize(lint* batched_data_a, lint* output, lint B, lint N, lint M, lint n1, lint n2);
 

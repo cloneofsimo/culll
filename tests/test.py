@@ -2,6 +2,7 @@ from build import culll
 import numpy as np
 import time
 
+BASE = 16
 
 def npvec2int(L, base=10):
     # L = L.tolist()
@@ -39,7 +40,7 @@ def cumult(a, b, base=10):
 
     c_out = np.zeros((B, N, M, nmax)).astype(np.uint32)
 
-    culll.bmult(a, b, c_out, 0, 0, base)
+    culll.bmult(a, b, c_out, 1, 0, base)
     return c_out
 
 
@@ -70,11 +71,12 @@ def test_add():
 
 
 def test_mult():
-    B, N, M, n = 2, 2, 2, 4
-    a = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
-    b = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
+    B, N, M, n = 2, 2, 2, 80
+    
+    a = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
+    b = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
 
-    c_out = cumult(a, b, 10)
+    c_out = cumult(a, b, BASE)
 
     a = npvec2int(a[0, 0, 0, :])
     b = npvec2int(b[0, 0, 0, :])
@@ -102,27 +104,27 @@ def test_sub():
     print("Subtract & Negation : Test passed")
 
 
-def benchmark_mult(X=3):
+def benchmark_mult(X=40):
 
     print("Benchmarking multiplication")
 
     B, N, M, n = X, X, X, 100
-
+    
     bef = time.time()
 
-    for _ in range(1000):
-        a = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
-        b = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
-        c = cumult(a, b, 10)
+    for _ in range(10):
+        a = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
+        b = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
+        c = cumult(a, b, BASE)
 
     print("cuda time: ", time.time() - bef)
 
     bef = time.time()
-    for _ in range(1000):
+    for _ in range(10):
         for _ in range(B * M * N):
-            a = np.random.randint(low=0, high=10, size=(n)).astype(np.uint32)
-            b = np.random.randint(low=0, high=10, size=(n)).astype(np.uint32)
-            c = npvec2int(a) * npvec2int(b)
+            a = np.random.randint(low=0, high=BASE, size=(n)).astype(np.uint32)
+            b = np.random.randint(low=0, high=BASE, size=(n)).astype(np.uint32)
+            c = npvec2int(a, BASE) * npvec2int(b, BASE)
 
     print("numpy time: ", time.time() - bef)
 
@@ -133,28 +135,30 @@ def benchmark_add(X=3):
 
     B, N, M, n = X, X, X, 100
 
+    
+
     bef = time.time()
 
-    for _ in range(1000):
-        a = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
-        b = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
-        c = cuadd(a, b, 10)
+    for _ in range(10):
+        a = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
+        b = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
+        c = cuadd(a, b, BASE)
 
     print("cuda time: ", time.time() - bef)
 
     bef = time.time()
-    for _ in range(1000):
+    for _ in range(10):
         for _ in range(B * M * N):
-            a = np.random.randint(low=0, high=10, size=(n)).astype(np.uint32)
-            b = np.random.randint(low=0, high=10, size=(n)).astype(np.uint32)
-            c = npvec2int(a) + npvec2int(b)
+            a = np.random.randint(low=0, high=BASE, size=(n)).astype(np.uint32)
+            b = np.random.randint(low=0, high=BASE, size=(n)).astype(np.uint32)
+            c = npvec2int(a, BASE) + npvec2int(b, BASE)
 
     print("numpy time: ", time.time() - bef)
 
 
 if __name__ == "__main__":
-    test_add()
+    # test_add()
     test_mult()
-    test_sub()
+    # test_sub()
     benchmark_mult()
     benchmark_add()

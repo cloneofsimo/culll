@@ -5,7 +5,7 @@
 
 using lint = unsigned int;
 
-
+// TODO: Implement this!!
 /// @brief D&C Karatsuba multiplication, all pointers have
 /// to be on GPU.
 /// @param batch_a
@@ -32,7 +32,7 @@ void batchKaratsuba(lint* batch_x, lint* batch_y, lint* batch_out, lint B,
         dim3 dimGrid(B, N, M);
 
         batchBigTensorKernelOffsetMult << <dimGrid, dimBlock >> > (
-            batch_x, batch_y, batch_out, B, N, M, n, a_start0, b_start,
+            batch_x, batch_y, batch_out, B, N, M, n, a_start, b_start,
             out_start, a_len, b_len, base);
 
         return;
@@ -81,11 +81,9 @@ void batchKaratsuba(lint* batch_x, lint* batch_y, lint* batch_out, lint B,
         batchBigTensorKernelNegate(bd, B, N, M, n, base);
 
         // ad_plus_bc = (a + b) * (c + d) - ac - bd
-        batchBigTensorKernelOffsetAdd(ad_plus_bc, ac, ad_plus_bc, B, N, M, n, 0, 0, 0,
-            n, n, base);
+        //batchBigTensorKernelOffsetAdd(ad_plus_bc, ac, ad_plus_bc, B, N, M, n, 0, 0, 0, n, n, base);
 
-        batchBigTensorKernelOffsetAdd(ad_plus_bc, bd, ad_plus_bc, B, N, M, n, 0, 0, 0,
-            n, n, base);
+        //batchBigTensorKernelOffsetAdd(ad_plus_bc, bd, ad_plus_bc, B, N, M, n, 0, 0, 0, n, n, base);
 
         // TODO : Make simpler operations... By refactoring mat, add in class-driven ways...
 

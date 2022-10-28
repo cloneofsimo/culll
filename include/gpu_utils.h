@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
 #include <sstream>
 #include <iostream>
-
+#include<cassert>
 
 #pragma once
 #define gpuErrchk(ans)                    \

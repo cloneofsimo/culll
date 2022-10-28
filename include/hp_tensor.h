@@ -1,4 +1,4 @@
-
+#include <string>
 using lint = unsigned int;
 
 
@@ -6,7 +6,16 @@ using lint = unsigned int;
 #pragma once
 class HPTensor {
 public:
-    HPTensor(int B, int N, int M, int base, int precision, int* exponent, lint* mantissa, lint* sign) {
+    /// @brief Datas are expressed as (1 + a_1 /b + a_2 / b^2  + ....  ) * 2^exp
+    /// @param B : the number of batches 
+    /// @param N : dim 1
+    /// @param M : dim 2
+    /// @param base : Mantissa are described in base. Base needs to be power of 2.
+    /// @param precision : Number of powers to describe Mantissa.
+    /// @param exponent : Exponent. Size : int x B x N x M 
+    /// @param mantissa : a_n-1, a_n-2, ... a_1.  : Size : B x N x M x precision
+    /// @param sign : Sign of the number. 0 for positive, 1 for negative. : Size : B x N x M
+    HPTensor(int B, int N, int M, int base, int precision, int* exponent, lint* mantissa, lint* sign, std::string device = "cpu") {
         this->B = B;
         this->N = N;
         this->M = M;
@@ -16,15 +25,14 @@ public:
         this->mantissa = mantissa;
         this->sign = sign;
         this->logbase = (int)log2(base);
+        this->device = device;
     }
     int B, N, M;
     int precision, base;
-    // exponent has B, N, M elements of int
-    // mantissa has B, N, M, precision elements of int
-    //
     int* exponent;
     lint* mantissa, * sign;
     lint logbase = 0;
+    std::string device;
 
     HPTensor astype(std::string type);
     void reprecision(int precision);

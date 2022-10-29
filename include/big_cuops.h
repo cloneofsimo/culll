@@ -50,22 +50,21 @@ __global__ void batchBigTensorKernelOffsetMult(lint* batched_data_a,
     lint a_n, lint b_n, lint base);
 
 #pragma once
+__global__ void batchBigTensorKernelOffsetMultShared256(lint* batched_data_a,
+    lint* batched_data_b,
+    lint* output_data, lint B, lint N,
+    lint M, lint n, lint a_start,
+    lint b_start, lint out_start,
+    lint a_n, lint b_n, lint base);
+
+
+#pragma once
 __global__ void batchBigTensorKernelOffsetAdd(lint* batched_data_a,
     lint* batched_data_b,
     lint* output_data, lint B, lint N,
     lint M, lint n, lint a_start,
     lint b_start, lint out_start,
     lint lens, lint base);
-
-// TODO: Implement this in the future for fused operation.
-// #pragma once
-// __global__ void batchBigTensorKernelOffsetSubtract(lint *batched_data_a,
-//                                               lint *batched_data_b,
-//                                               lint *output_data, lint B, lint
-//                                               N, lint M, lint n, lint
-//                                               a_start, lint b_start, lint
-//                                               out_start, lint lens, lint
-//                                               base);
 
 #pragma once
 __global__ void batchBigTensorKernelNegate(lint* batched_data_a, lint B, lint N,

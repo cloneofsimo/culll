@@ -23,8 +23,7 @@ PYBIND11_MODULE(culll, m)
   m.def("bdigit_resize", batchBigTensorDigitResizeWrapper);
 
   py::class_<BigTensor>(m, "BigTensor")
-    .def(py::init<pybind11::array_t<lint>, std::string, lint>())
-    .def("to_device", &BigTensor::to_device)
+    .def(py::init<pybind11::array_t<lint>, lint>())
     .def("copy", &BigTensor::copy)
     .def("print_slice", &BigTensor::print_slice)
     .def("_add_gpu", &BigTensor::_add_gpu)

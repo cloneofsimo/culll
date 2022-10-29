@@ -5,7 +5,7 @@ using lint = unsigned int;
 
 #pragma once
 class BigTensor {
-  public:
+    public:
     BigTensor(lint *i_data, lint B, lint N, lint M, lint n, lint base) {
         this->data = new lint[B * M * N * n];
         memcpy(this->data, i_data, B * M * N * n * sizeof(lint));
@@ -149,24 +149,6 @@ class BigTensor {
         return BigTensor(_data, _B, _N, _M, _n, this->base);
     }
 
-    BigTensor redigit(int n2) {
-        BigTensor tmp = BigTensor(this->B, this->N, this->M, n2, this->base);
-        _sync();
-        for (int i = 0; i < this->B; i++) {
-            for (int j = 0; j < this->N; j++) {
-                for (int k = 0; k < this->M; k++) {
-                    for (int l = 0; l < this->n; l++) {
-                        tmp.data[i * this->N * this->M * n2 + j * this->M * n2 +
-                                 k * n2 + l] =
-                            this->data[i * this->N * this->M * this->n +
-                                       j * this->M * this->n + k * this->n + l];
-                    }
-                }
-            }
-        }
-        return tmp;
-    }
-
     void write_numpy(pybind11::array_t<lint> data) {
         pybind11::buffer_info ha = data.request();
         lint *data_ptr = (lint *)ha.ptr;
@@ -190,7 +172,9 @@ class BigTensor {
         }
     }
 
-    BigTensor _add_gpu(BigTensor a) {
+    // Operations
+
+    BigTensor add_gpu(BigTensor a) {
 
         BigTensor c = this->copy();
 
@@ -204,8 +188,8 @@ class BigTensor {
         return c;
     }
 
-    BigTensor _mult_gpu(BigTensor a) {
-        BigTensor c = BigTensor(B, N, M, a.n + this->n, base);
+    BigTensor mult_gpu(BigTensor a) {
+        BigTensor c(B, N, M, a.n + this->n, base);
         lint a_len = a.n;
         lint b_len = this->n;
 
@@ -219,6 +203,64 @@ class BigTensor {
         return c;
     }
 
+    BigTensor redigit_gpu(int n2) {
+        BigTensor tmp = BigTensor(this->B, this->N, this->M, n2, this->base);
+
+        dim3 dimBlock(1, 1, 1);
+        dim3 dimGrid(B, N, M);
+
+        batchBigTensorKernelDigitResize<<<dimGrid, dimBlock>>>(
+            this->cuda_data, tmp.cuda_data, B, N, M, n, n2, base);
+
+        return tmp;
+    }
+
+    void negate_gpu_inplace() {
+        dim3 dimBlock(1, 1, 1);
+        dim3 dimGrid(B, N, M);
+
+        batchBigTensorKernelNegate<<<dimGrid, dimBlock>>>(this->cuda_data, B, N,
+                                                          M, n, base);
+    }
+
+    BigTensor negate_gpu() {
+        BigTensor tmp(*this);
+        tmp.negate_gpu_inplace();
+        return tmp;
+    }
+
+    void shift_gpu_inplace(BigTensor &move_amount) {
+        dim3 dimBlock(1, 1, 1);
+        dim3 dimGrid(B, N, M);
+
+        lint logbase = (lint)round(log2(base));
+        assert(1 << logbase == base);
+
+        batchBigTensorKernelShift<<<dimGrid, dimBlock>>>(
+            this->cuda_data, move_amount.cuda_data, B, N, M, n, logbase, base);
+    }
+
+    BigTensor get_shift_amount_gpu(){
+        // assume that the value is unsigned, find amount of shift appropriately
+        // to make all values fall in range between [base /2, base)
+    
+
+        BigTensor moved_amount = BigTensor(this->B, this->N, this->M, 1, this->base);
+        
+        dim3 dimBlock(1, 1, 1);
+        dim3 dimGrid(B, N, M);
+
+        lint logbase = (lint)round(log2(base));
+        assert(1 << logbase == base);
+
+        batchBigTensorKernelNormalizedShiftAmount<<<dimGrid, dimBlock>>>(
+            this->cuda_data, moved_amount.cuda_data, B, N, M, n, logbase, base);
+
+        return moved_amount;
+    }
+
+    // Attributes, IOs
+    
     void print_slice(lint a0_s, lint a0_e, lint a1_s, lint a1_e, lint a2_s,
                      lint a2_e) {
         _sync();
@@ -242,4 +284,25 @@ class BigTensor {
             std::cout << "]" << std::endl;
         }
     }
+
+    std::vector<int> size(){
+        std::vector<int> s;
+        s.push_back(this->B);
+        s.push_back(this->N);
+        s.push_back(this->M);
+        s.push_back(this->n);
+        return s;
+    }
+
+    std::vector<lint> at_index(lint b, lint n, lint m){
+        std::vector<lint> p;
+        _sync();
+        for(int i = 0; i < this->n; i++){
+            p.push_back(this->data[b * this->N * this->M * this->n +
+                                          n * this->M * this->n +
+                                          m * this->n + i]);
+        }
+        return p;
+    }
+
 };

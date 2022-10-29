@@ -26,7 +26,14 @@ PYBIND11_MODULE(culll, m)
     .def(py::init<pybind11::array_t<lint>, lint>())
     .def("copy", &BigTensor::copy)
     .def("print_slice", &BigTensor::print_slice)
-    .def("_add_gpu", &BigTensor::_add_gpu)
-    .def("write_numpy", &BigTensor::write_numpy);
-
+    .def("add_gpu", &BigTensor::add_gpu)
+    .def("mult_gpu", &BigTensor::mult_gpu)
+    .def("negate_gpu", &BigTensor::negate_gpu)
+    .def("negate_gpu_inplace", &BigTensor::negate_gpu_inplace)
+    .def("get_shift_amount_gpu", &BigTensor::get_shift_amount_gpu)
+    .def("shift_gpu_inplace", &BigTensor::shift_gpu_inplace)
+    .def("redigit_gpu", &BigTensor::redigit_gpu)
+    .def("write_numpy", &BigTensor::write_numpy)
+    .def("size", &BigTensor::size)
+    .def("at_index", &BigTensor::at_index);
 }

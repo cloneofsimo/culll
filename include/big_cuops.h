@@ -71,5 +71,10 @@ __global__ void batchBigTensorKernelNegate(lint* batched_data_a, lint B, lint N,
     lint M, lint n, lint base);
 
 #pragma once
-__global__ void batchBigTensorKernelDigitResize(lint* batched_data_a, lint* output, lint B, lint N, lint M, lint n1, lint n2);
+__global__ void batchBigTensorKernelDigitResize(lint* batched_data_a, lint* output, lint B, lint N, lint M, lint n1, lint n2, lint base);
 
+#pragma once
+__global__ void batchBigTensorKernelShift(lint* batched_data_man, lint* amount, lint B, lint N, lint M, lint n, lint logbase, lint base);
+
+#pragma once
+__global__ void batchBigTensorKernelNormalizedShiftAmount(lint* batched_data_man, lint* amount_out, lint B, lint N, lint M, lint n, lint logbase, lint base);

@@ -69,4 +69,4 @@ def test_zero_pad():
 
 if __name__ == "__main__":
     #test_resize()
-    test_signed_overall()
+    test_signed_addition()

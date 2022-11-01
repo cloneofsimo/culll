@@ -1,6 +1,6 @@
-#include <big_cuops.h>
 #include <gpu_utils.h>
 #include <string>
+
 using lint = unsigned int;
 
 #pragma once
@@ -303,11 +303,8 @@ class BigTensor {
     }
 
     std::vector<int> size() {
-        std::vector<int> s;
-        s.push_back(this->B);
-        s.push_back(this->N);
-        s.push_back(this->M);
-        s.push_back(this->n);
+        std::vector<int> s = {(int) this->B, (int) this->N, (int) this->M,
+                              (int) this->n};
         return s;
     }
 

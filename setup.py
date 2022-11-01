@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -34,7 +35,7 @@ class CMakeBuild(build_ext):
         # Must be in this form due to bug in .resolve() only fixed in Python 3.10+
         ext_fullpath = Path.cwd() / self.get_ext_fullpath(ext.name)  # type: ignore[no-untyped-call]
         extdir = ext_fullpath.parent.resolve()
-
+        print(f'extdir: {extdir}')  # noqa: T001
         # Using this requires trailing slash for auto-detection & inclusion of
         # auxiliary "native" libs
 
@@ -52,6 +53,7 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
+            
         ]
         build_args = []
         # Adding CMake arguments set as environment variable
@@ -61,7 +63,7 @@ class CMakeBuild(build_ext):
 
         # In this example, we pass in the version to C++. You might not need to.
         cmake_args += [f"-DEXAMPLE_VERSION_INFO={self.distribution.get_version()}"]  # type: ignore[attr-defined]
-
+        
         if self.compiler.compiler_type != "msvc":
             # Using Ninja-build since it a) is available as a wheel and b)
             # multithreads automatically. MSVC would require all variables be
@@ -119,13 +121,14 @@ class CMakeBuild(build_ext):
         build_temp = Path(self.build_temp) / ext.name
         if not build_temp.exists():
             build_temp.mkdir(parents=True)
-
+        
+        # build
         subprocess.run(
             ["cmake", ext.sourcedir] + cmake_args, cwd=build_temp, check=True
         )
         subprocess.run(
             ["cmake", "--build", "."] + build_args, cwd=build_temp, check=True
-        )
+        ) 
 
 
 setup(

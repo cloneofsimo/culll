@@ -4,7 +4,7 @@ import numpy as np
 BASE = 16
 
 def _get_pair_numbers():
-    B, N, M, n = 2, 2, 2, BASE
+    B, N, M, n = 2, 2, 2, 100
 
     a = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
     b = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
@@ -20,26 +20,33 @@ def _npvec2int(L, base=10):
 
 def get_val(a : BigTensor, i, j, k):
     L = a.at_index(i, j, k)
-    if L[-1] >= a.base // 2:
+    if L[-1] >= BASE // 2:
 
         n_bits = len(L)
-        L = _npvec2int(L)
-        return -(a.base**n_bits) + L
+        L = _npvec2int(L, BASE)
+        return -(BASE**n_bits) + L
     else:
-        return _npvec2int(L, a.base)
+        return _npvec2int(L, BASE)
 
 def at_0(a : BigTensor):
-    return a.at(0, 0, 0)
+    return get_val(a, 0, 0, 0)
 
 def test_signed_overall():
     # test signed operations
     a, b = _get_pair_numbers()
-    d = a._add_gpu(b)
+    d = a.add_gpu(b)
+
+    #print()
 
     assert get_val(d, 0, 0, 0) == get_val(a, 0, 0, 0) + get_val(b, 0, 0, 0)
 
     print(a.size())
     print(at_0(d))
+
+    a, b = _get_pair_numbers()
+    d = a.mult_gpu(b)
+
+    assert get_val(d, 0, 0, 0) == get_val(a, 0, 0, 0) * get_val(b, 0, 0, 0)
     """
     a_at0 = a.at(0, 0, 0)
     b_at0 = b.at(0, 0, 0)

@@ -5,7 +5,7 @@ using lint = unsigned int;
 
 #pragma once
 class BigTensor {
-    public:
+  public:
     BigTensor(lint *i_data, lint B, lint N, lint M, lint n, lint base) {
         this->data = new lint[B * M * N * n];
         memcpy(this->data, i_data, B * M * N * n * sizeof(lint));
@@ -229,29 +229,30 @@ class BigTensor {
         return tmp;
     }
 
-    void shift_gpu_inplace(BigTensor &move_amount) {
+    void shift_gpu_inplace(BigTensor move_amount) {
         dim3 dimBlock(1, 1, 1);
         dim3 dimGrid(B, N, M);
 
         lint logbase = (lint)round(log2(base));
-        assert(1 << logbase == base);
+        // assert(1 << logbase == base);
 
         batchBigTensorKernelShift<<<dimGrid, dimBlock>>>(
             this->cuda_data, move_amount.cuda_data, B, N, M, n, logbase, base);
+        return;
     }
 
-    BigTensor get_shift_amount_gpu(){
+    BigTensor get_shift_amount_gpu() {
         // assume that the value is unsigned, find amount of shift appropriately
         // to make all values fall in range between [base /2, base)
-    
 
-        BigTensor moved_amount = BigTensor(this->B, this->N, this->M, 1, this->base);
-        
+        BigTensor moved_amount =
+            BigTensor(this->B, this->N, this->M, 1, this->base);
+
         dim3 dimBlock(1, 1, 1);
         dim3 dimGrid(B, N, M);
 
         lint logbase = (lint)round(log2(base));
-        assert(1 << logbase == base);
+        // assert(1 << logbase == base);
 
         batchBigTensorKernelNormalizedShiftAmount<<<dimGrid, dimBlock>>>(
             this->cuda_data, moved_amount.cuda_data, B, N, M, n, logbase, base);
@@ -260,7 +261,7 @@ class BigTensor {
     }
 
     // Attributes, IOs
-    
+
     void print_slice(lint a0_s, lint a0_e, lint a1_s, lint a1_e, lint a2_s,
                      lint a2_e) {
         _sync();
@@ -285,7 +286,7 @@ class BigTensor {
         }
     }
 
-    std::vector<int> size(){
+    std::vector<int> size() {
         std::vector<int> s;
         s.push_back(this->B);
         s.push_back(this->N);
@@ -294,15 +295,13 @@ class BigTensor {
         return s;
     }
 
-    std::vector<lint> at_index(lint b, lint n, lint m){
+    std::vector<lint> at_index(lint b, lint n, lint m) {
         std::vector<lint> p;
         _sync();
-        for(int i = 0; i < this->n; i++){
+        for (int i = 0; i < this->n; i++) {
             p.push_back(this->data[b * this->N * this->M * this->n +
-                                          n * this->M * this->n +
-                                          m * this->n + i]);
+                                   n * this->M * this->n + m * this->n + i]);
         }
         return p;
     }
-
 };

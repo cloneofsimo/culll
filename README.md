@@ -26,3 +26,5 @@ Currently WIP.
 - [ ] Carry-lookahead addition
 - [ ] Arbitrary precision add, mult, subtract, int conversion, compare, inner product
 - [ ] View, Reshape, Transpose
+- [ ] Implement stubtests: https://mypy.readthedocs.io/en/stable/stubtest.html
+- [ ] Automate stubgen

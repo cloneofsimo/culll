@@ -65,6 +65,13 @@ __global__ void batchBigTensorKernelDigitResize(lint *batched_data_a,
                                                 lint M, lint n1, lint n2,
                                                 lint base);
 
+__global__ void batchBigTensorKernelZeroPad(lint *batched_data_a,
+                                                lint *output, lint B, lint N,
+                                                lint M, lint n1, lint n2,
+                                                lint base);
+
+
+
 __global__ void batchBigTensorKernelShift(lint *batched_data_man, lint *amount,
                                           lint B, lint N, lint M, lint n,
                                           lint logbase, lint base);

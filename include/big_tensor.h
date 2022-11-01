@@ -215,6 +215,22 @@ class BigTensor {
         return tmp;
     }
 
+    BigTensor zero_pad_gpu(int n2) {
+        if(n2 <= this->n){
+            std::cout << "Error: n2 <= this->n" << std::endl;
+            return this->copy();
+        }
+        BigTensor tmp = BigTensor(this->B, this->N, this->M, n2, this->base);
+
+        dim3 dimBlock(1, 1, 1);
+        dim3 dimGrid(B, N, M);
+
+        batchBigTensorKernelZeroPad<<<dimGrid, dimBlock>>>(
+            this->cuda_data, tmp.cuda_data, B, N, M, n, n2, base);
+
+        return tmp;
+    }
+
     void negate_gpu_inplace() {
         dim3 dimBlock(1, 1, 1);
         dim3 dimGrid(B, N, M);

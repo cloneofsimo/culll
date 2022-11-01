@@ -67,16 +67,18 @@ __global__ void batchBigTensorKernelOffsetMultShared256(
     lint overflow = 0;
 
     int pos = batch_idx * N * M * n + row_idx * M * n + col_idx * n;
+    int posa = batch_idx * N * M * a_n + row_idx * M * a_n + col_idx * a_n + a_start;
+    int posb = batch_idx * N * M * b_n + row_idx * M * b_n + col_idx * b_n + b_start;
 
     __shared__ lint a_shared[256];
     __shared__ lint b_shared[256];
     __shared__ lint out_shared[256];
 
     for (int i = 0; i < a_n; i++) {
-        a_shared[i] = batched_data_a[pos + i + a_start];
+        a_shared[i] = batched_data_a[posa + i];
     }
     for (int i = 0; i < b_n; i++) {
-        b_shared[i] = batched_data_b[pos + i + b_start];
+        b_shared[i] = batched_data_b[posb + i];
     }
 
     for (int i = 0; i < a_n; i++) {

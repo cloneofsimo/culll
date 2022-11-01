@@ -1,10 +1,10 @@
 from culll import BigTensor
 import numpy as np
 
-BASE = 16
+BASE = 10
 
-def _get_pair_numbers():
-    B, N, M, n = 2, 2, 2, 100
+def _get_pair_numbers(n = 100):
+    B, N, M, n = 2, 2, 2, n
 
     a = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
     b = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
@@ -31,48 +31,42 @@ def get_val(a : BigTensor, i, j, k):
 def at_0(a : BigTensor):
     return get_val(a, 0, 0, 0)
 
-def test_signed_overall():
-    # test signed operations
-    a, b = _get_pair_numbers()
-    d = a.add_gpu(b)
+def test_resize():
+    a, b = _get_pair_numbers(20)
+    print(a.at_index(0, 0, 0))
 
+    a = a.redigit_gpu(22)
+    print(a.at_index(0, 0, 0))
+
+def test_signed_addition():
+    # test signed operations
+    a, b = _get_pair_numbers(20)
+    a, b = a.redigit_gpu(22), b.redigit_gpu(22) # make sure they are the same size
+    c = a.add_gpu(b)
+    
     #print()
 
-    assert get_val(d, 0, 0, 0) == get_val(a, 0, 0, 0) + get_val(b, 0, 0, 0)
+    assert get_val(c, 0, 0, 0) == get_val(a, 0, 0, 0) + get_val(b, 0, 0, 0)
 
-    print(a.size())
-    print(at_0(d))
+def test_signed_mult(verbose : bool = False):
+    a, b = _get_pair_numbers(10)
+    a, b = a.zero_pad_gpu(12), b.zero_pad_gpu(12) # make sure they are the same size
+    print(a.at_index(0, 0, 0))
+    print(b.at_index(0, 0, 0))
+    c = a.mult_gpu(b)
+    print(c.at_index(0, 0, 0))
+    
+    assert get_val(c, 0, 0, 0) == get_val(a, 0, 0, 0) * get_val(b, 0, 0, 0), f"{get_val(c, 0, 0, 0)} != {get_val(a, 0, 0, 0)} * {get_val(b, 0, 0, 0)}"
 
-    a, b = _get_pair_numbers()
-    d = a.mult_gpu(b)
-
-    assert get_val(d, 0, 0, 0) == get_val(a, 0, 0, 0) * get_val(b, 0, 0, 0)
-    """
-    a_at0 = a.at(0, 0, 0)
-    b_at0 = b.at(0, 0, 0)
-    c_at0 = c.at(0, 0, 0)
-    print(a_at0, b_at0, c_at0)
-
-    a = a._resize(20)
-    b = b._resize(20)
-    c = c._resize(20)
-
-    a_at0 = a.at(0, 0, 0)
-    b_at0 = b.at(0, 0, 0)
-    c_at0 = c.at(0, 0, 0)
-
-    print(a_at0, b_at0, c_at0)
-
-    f1 = lambda x, y: x + y - x - y + x + x
-    f2 = lambda x, y: y * x + x * x - y + x
-    f3 = lambda x, y, z: x * x * x - y * y * y - z * z * z
-
-    assert f1(a_at0, b_at0) == f1(a, b).at(0, 0, 0), print(
-        f"{f1(a_at0, b_at0)} != {f1(a, b).at(0, 0, 0)}"
-    )
-    assert f2(a_at0, b_at0) == f2(a, b).at(0, 0, 0)
-    assert f3(a_at0, b_at0, c_at0) == f3(a, b, c).at(0, 0, 0)
-    """
+def test_zero_pad():
+    a, b = _get_pair_numbers(10)
+    print(a.at_index(0, 0, 0))
+    a = a.zero_pad_gpu(12)
+    print(a.at_index(0, 0, 0))
 
 
-test_signed_overall()
+
+
+if __name__ == "__main__":
+    #test_resize()
+    test_signed_overall()

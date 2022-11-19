@@ -76,6 +76,10 @@ __global__ void batchBigTensorKernelShift(lint *batched_data_man, lint *amount,
                                           lint B, lint N, lint M, lint n,
                                           lint logbase, lint base);
 
-__global__ void batchBigTensorKernelNormalizedShiftAmount(
+__global__ void batchBigTensorKernelCLZ(
     lint *batched_data_man, lint *amount_out, lint B, lint N, lint M, lint n,
     lint logbase, lint base);
+
+
+__global__ void batchBigTensorKernelAsBinary(
+    lint *input, lint *output, lint B, lint N, lint M, lint n, lint logbase);

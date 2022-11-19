@@ -66,6 +66,24 @@ __global__ void batchBigTensorKernelZeroPad(lint *batched_data_a, lint *output,
     }
 }
 
+__global__ void batchBigTensorKernelAsBinary(lint *input, lint *output, lint B,
+                                             lint N, lint M, lint n,
+                                             lint logbase) {
+
+    int batch_idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int row_idx = blockIdx.y * blockDim.y + threadIdx.y;
+    int col_idx = blockIdx.z * blockDim.z + threadIdx.z;
+
+    int pos = batch_idx * N * M * n + row_idx * M * n + col_idx * n;
+
+    for (int i = 0; i < n; i++) {
+        lint digit = input[pos + i];
+        for (int j = 0; j < logbase; j++) {
+            output[pos * logbase + i * logbase + j] = digit % 2;
+            digit /= 2;
+        }
+    }
+}
 
 void batchBigTensorNegateWrapper(pybind11::array_t<lint> batched_data_a,
                                  int verbose, int base = 10) {

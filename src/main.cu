@@ -8,6 +8,11 @@
 #include <big_tensor.h>
 #include <gpu_utils.h>
 
+#include "ops/add.cu"
+#include "ops/morph.cu"
+#include "ops/mult.cu"
+#include "ops/shift.cu"
+
 using lint = unsigned int;
 
 namespace py = pybind11;
@@ -16,18 +21,25 @@ PYBIND11_MODULE(culll, m) {
     
     py::class_<BigTensor>(m, "BigTensor")
         .def(py::init<pybind11::array_t<lint>, lint>())
-        
+
+        // read-writes
+        .def_readwrite("base", &BigTensor::base)
+        .def_readwrite("logbase", &BigTensor::logbase)
+
+
         // Operations
         .def("add_gpu", &BigTensor::add_gpu)
         .def("mult_gpu", &BigTensor::mult_gpu)
-        .def("get_shift_amount_gpu", &BigTensor::get_shift_amount_gpu)
+        .def("clz_gpu", &BigTensor::clz_gpu)
         .def("shift_gpu_inplace", &BigTensor::shift_gpu_inplace)
+
         // Morphs
         .def("redigit_gpu", &BigTensor::redigit_gpu)
         .def("zero_pad_gpu", &BigTensor::zero_pad_gpu)
         .def("negate_gpu", &BigTensor::negate_gpu)
         .def("negate_gpu_inplace", &BigTensor::negate_gpu_inplace)
-        
+        .def("as_binary", &BigTensor::as_binary)
+
         //ios
         .def("copy", &BigTensor::copy)
         .def("print_slice", &BigTensor::print_slice)

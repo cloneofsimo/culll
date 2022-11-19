@@ -45,7 +45,7 @@ __global__ void batchBigTensorKernelShift(lint* batched_data_man, lint* amount, 
 
 
 
-__global__ void batchBigTensorKernelNormalizedShiftAmount(lint* batched_data_man, lint* amount_out, lint B, lint N, lint M, lint n, lint logbase, lint base) {
+__global__ void batchBigTensorKernelCLZ(lint* batched_data_man, lint* amount_out, lint B, lint N, lint M, lint n, lint logbase, lint base) {
 
     int batch_idx = blockIdx.x * blockDim.x + threadIdx.x;
     int row_idx = blockIdx.y * blockDim.y + threadIdx.y;
@@ -67,7 +67,10 @@ __global__ void batchBigTensorKernelNormalizedShiftAmount(lint* batched_data_man
             sums += logbase;
         }
     }
-    sums += logbase - __ffs(lastval) + 1;
+    sums += logbase - (32 - __clz(lastval));
+    if(sums == n * logbase){
+        sums = -1;
+    }
     amount_out[pos] = sums;
 }
 

@@ -4,7 +4,7 @@ import time
 
 
 def npvec2int(L, base=10):
-    # L = L.tolist()
+#L = L.tolist()
     return sum([int(base**i) * int(L[i]) for i in range(len(L))])
 
 
@@ -78,14 +78,14 @@ class BigTensor:
 
 def test_unsigned_overall():
 
-    # test unsigned operations
+#test unsigned operations
 
     B, N, M, n = 2, 2, 2, 10
     a = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
     b = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
     c = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)
 
-    # make it positive
+#make it positive
     a[..., -1] = 0
     b[..., -1] = 0
     c[..., 2:] = 0
@@ -94,15 +94,15 @@ def test_unsigned_overall():
     b = BigTensor(b)
     c = BigTensor(c)
 
-    # check resize operation
+#check resize operation
     a._resize(12)
 
     a_at0 = a.at(0, 0, 0)
     b_at0 = b.at(0, 0, 0)
     c_at0 = c.at(0, 0, 0)
 
-    #
-    # print(a * b)
+#
+#print(a* b)
 
     f1 = lambda x, y: x * y
     f2 = lambda x, y: x * y + x
@@ -114,7 +114,7 @@ def test_unsigned_overall():
 
 
 def test_signed_overall():
-    # test signed operations
+#test signed operations
     B, N, M, n = 2, 2, 2, 10
 
     a = np.random.randint(low=0, high=10, size=(B, N, M, n)).astype(np.uint32)

@@ -2,7 +2,6 @@
 #include <big_cuops.h>
 #include <gpu_utils.h>
 
-
 using lint = unsigned int;
 
 // TODO: Implement this!!
@@ -18,78 +17,72 @@ using lint = unsigned int;
 /// @param lens
 /// @param base
 void batchKaratsuba(lint* batch_x, lint* batch_y, lint* batch_out, lint B,
-    lint N, lint M, lint n, lint a_start, lint b_start,
-    lint out_start, lint a_len, lint b_len, lint base) {
+                    lint N, lint M, lint n, lint a_start, lint b_start,
+                    lint out_start, lint a_len, lint b_len, lint base) {
+  // where to clear gpu memeory?
 
-    // where to clear gpu memeory?
+  lint n_lower = n / 2;
+  lint n_upper = n - n_lower;
 
-    lint n_lower = n / 2;
-    lint n_upper = n - n_lower;
+  if (a_len < 4 || b_len < 4) {
+    // naive multiplication.
+    dim3 dimBlock(1, 1, 1);
+    dim3 dimGrid(B, N, M);
 
-    if (a_len < 4 || b_len < 4) {
-        // naive multiplication.
-        dim3 dimBlock(1, 1, 1);
-        dim3 dimGrid(B, N, M);
+    batchBigTensorKernelOffsetMult<<<dimGrid, dimBlock>>>(
+        batch_x, batch_y, batch_out, B, N, M, n, a_start, b_start, out_start,
+        a_len, b_len, base);
 
-        batchBigTensorKernelOffsetMult << <dimGrid, dimBlock >> > (
-            batch_x, batch_y, batch_out, B, N, M, n, a_start, b_start,
-            out_start, a_len, b_len, base);
+    return;
+  } else {
+    lint *ac, *bd, *ad_plus_bc, *a_plus_b, *c_plus_d;
 
-        return;
-    }
-    else {
+    // a : upper of x
+    // b : lower of x
+    // c : upper of y
+    // d : lower of y
 
-        lint* ac, * bd, * ad_plus_bc, * a_plus_b, * c_plus_d;
+    gpuErrchk(cudaMalloc(&ac, sizeof(lint) * B * N * M * n));
+    gpuErrchk(cudaMalloc(&bd, sizeof(lint) * B * N * M * n));
+    gpuErrchk(cudaMalloc(&ad_plus_bc, sizeof(lint) * B * N * M * n));
+    gpuErrchk(cudaMalloc(&a_plus_b, sizeof(lint) * B * N * M * n));
+    gpuErrchk(cudaMalloc(&c_plus_d, sizeof(lint) * B * N * M * n));
 
-        // a : upper of x
-        // b : lower of x
-        // c : upper of y
-        // d : lower of y
+    dim3 dimBlock(1, 1, 1);
+    dim3 dimGrid(B, N, M);
 
-        gpuErrchk(cudaMalloc(&ac, sizeof(lint) * B * N * M * n));
-        gpuErrchk(cudaMalloc(&bd, sizeof(lint) * B * N * M * n));
-        gpuErrchk(cudaMalloc(&ad_plus_bc, sizeof(lint) * B * N * M * n));
-        gpuErrchk(cudaMalloc(&a_plus_b, sizeof(lint) * B * N * M * n));
-        gpuErrchk(cudaMalloc(&c_plus_d, sizeof(lint) * B * N * M * n));
+    // ac
+    batchKaratsuba(batch_x, batch_y, ac, B, N, M, n, a_start + n_lower,
+                   b_start + n_lower, 0, n_upper, n_upper, base);
 
-        dim3 dimBlock(1, 1, 1);
-        dim3 dimGrid(B, N, M);
+    // bd
+    batchKaratsuba(batch_x, batch_y, bd, B, N, M, n, a_start, b_start, 0,
+                   n_lower, n_lower, base);
 
-        // ac
-        batchKaratsuba(batch_x, batch_y, ac, B, N, M, n,
-            a_start + n_lower, b_start + n_lower, 0, n_upper,
-            n_upper, base);
+    // a + b
+    batchBigTensorKernelOffsetAdd(batch_x, batch_x, a_plus_b, B, N, M, n,
+                                  a_start + n_lower, a_start, 0, n_upper, base);
 
-        // bd
-        batchKaratsuba(batch_x, batch_y, bd, B, N, M, n, a_start,
-            b_start, 0, n_lower, n_lower, base);
+    // c + d
+    batchBigTensorKernelOffsetAdd(batch_y, batch_y, c_plus_d, B, N, M, n,
+                                  b_start + n_lower, b_start, 0, n_lower, base);
 
-        // a + b
-        batchBigTensorKernelOffsetAdd(batch_x, batch_x, a_plus_b, B, N, M, n,
-            a_start + n_lower, a_start, 0, n_upper, base);
+    // (a + b) * (c + d)
+    batchKaratsuba(a_plus_b, c_plus_d, ad_plus_bc, B, N, M, n, 0, 0, 0, n, n,
+                   base);
 
-        // c + d
-        batchBigTensorKernelOffsetAdd(batch_y, batch_y, c_plus_d, B, N, M, n,
-            b_start + n_lower, b_start, 0, n_lower, base);
+    // negate ac, bd
+    batchBigTensorKernelNegate(ac, B, N, M, n, base);
+    batchBigTensorKernelNegate(bd, B, N, M, n, base);
 
-        // (a + b) * (c + d)
-        batchKaratsuba(a_plus_b, c_plus_d, ad_plus_bc, B, N, M, n, 0, 0, 0,
-            n, n, base);
+    // ad_plus_bc = (a + b) * (c + d) - ac - bd
+    // batchBigTensorKernelOffsetAdd(ad_plus_bc, ac, ad_plus_bc, B, N, M, n, 0,
+    // 0, 0, n, n, base);
 
-        // negate ac, bd
-        batchBigTensorKernelNegate(ac, B, N, M, n, base);
-        batchBigTensorKernelNegate(bd, B, N, M, n, base);
+    // batchBigTensorKernelOffsetAdd(ad_plus_bc, bd, ad_plus_bc, B, N, M, n, 0,
+    // 0, 0, n, n, base);
 
-        // ad_plus_bc = (a + b) * (c + d) - ac - bd
-        //batchBigTensorKernelOffsetAdd(ad_plus_bc, ac, ad_plus_bc, B, N, M, n, 0, 0, 0, n, n, base);
-
-        //batchBigTensorKernelOffsetAdd(ad_plus_bc, bd, ad_plus_bc, B, N, M, n, 0, 0, 0, n, n, base);
-
-        // TODO : Make simpler operations... By refactoring mat, add in class-driven ways...
-
-
-
-
-
-    }
+    // TODO : Make simpler operations... By refactoring mat, add in class-driven
+    // ways...
+  }
 }

@@ -1,47 +1,85 @@
+#include <big_cuops.h>
+#include <gpu_utils.h>
+
 #include <string>
+
+#include "big_tensor.h"
+
 using lint = unsigned int;
+
+namespace py = pybind11;
 
 #pragma once
 class HPTensor {
  public:
-  /// @brief Datas are expressed as (1 + a_1 /b + a_2 / b^2  + ....  ) * 2^exp
-  /// @param B : the number of batches
-  /// @param N : dim 1
-  /// @param M : dim 2
-  /// @param base : Mantissa are described in base. Base needs to be power of 2.
-  /// @param precision : Number of powers to describe Mantissa.
-  /// @param exponent : Exponent. Size : int x B x N x M
-  /// @param mantissa : a_n-1, a_n-2, ... a_1.  : Size : B x N x M x precision
-  /// @param sign : Sign of the number. 0 for positive, 1 for negative. : Size :
-  /// B x N x M
-  HPTensor(int B, int N, int M, int base, int precision, int* exponent,
-           lint* mantissa, lint* sign, std::string device = "cpu") {
-    this->B = B;
-    this->N = N;
-    this->M = M;
-    this->precision = precision;
+  BigTensor *mantissa, *exponent, *sign;
+  lint B, N, M, n, base, logbase;
+  HPTensor(py::array_t<lint> mantissa, py::array_t<lint> exponent,
+           py::array_t<lint> sign, lint base) {
+    this->mantissa = new BigTensor(mantissa, base);
+    this->exponent = new BigTensor(exponent, 1 << 16);
+    this->sign = new BigTensor(sign, 2);
     this->base = base;
-    this->exponent = exponent;
-    this->mantissa = mantissa;
-    this->sign = sign;
-    this->logbase = (int)log2(base);
-    this->device = device;
+    this->logbase = (lint)round(log2(base));
+    this->B = this->mantissa->B;
+    this->N = this->mantissa->N;
+    this->M = this->mantissa->M;
+    this->n = this->mantissa->n;
   }
-  int B, N, M;
-  int precision, base;
-  int* exponent;
-  lint *mantissa, *sign;
-  lint logbase = 0;
-  std::string device;
 
-  HPTensor astype(std::string type);
-  void reprecision(int precision);
-  void add(HPTensor* other);
-  void mult(HPTensor* other);
-  void div(HPTensor* other);
-  void shift(int shift);
-  void reposition(int* amount);
-  void swap_exp_maximum(HPTensor* other);
-  HPTensor inner_product(HPTensor* other, int idx1, int idx2);
-  HPTensor copy();
+  HPTensor(BigTensor mantissa, BigTensor exponent, BigTensor sign) {
+    this->mantissa = new BigTensor(mantissa);
+    this->exponent = new BigTensor(exponent);
+    this->sign = new BigTensor(sign);
+    this->base = mantissa.base;
+    this->logbase = mantissa.logbase;
+    this->B = mantissa.B;
+    this->N = mantissa.N;
+    this->M = mantissa.M;
+    this->n = mantissa.n;
+  }
+
+  ~HPTensor() {
+    delete mantissa;
+    delete exponent;
+    delete sign;
+  }
+
+  HPTensor(const HPTensor& other) {
+    this->mantissa = new BigTensor(*other.mantissa);
+    this->exponent = new BigTensor(*other.exponent);
+    this->sign = new BigTensor(*other.sign);
+    this->base = other.base;
+    this->logbase = other.logbase;
+    this->B = other.B;
+    this->N = other.N;
+    this->M = other.M;
+    this->n = other.n;
+  }
+
+  HPTensor& operator=(const HPTensor& other) {
+    this->mantissa = other.mantissa;
+    this->exponent = other.exponent;
+    this->sign = other.sign;
+    this->base = other.base;
+    this->logbase = other.logbase;
+    this->B = other.B;
+    this->N = other.N;
+    this->M = other.M;
+    this->n = other.n;
+    return *this;
+  }
+
+  HPTensor mult_gpu(HPTensor& other) {
+    BigTensor _c_mantissa = *this->mantissa * *other.mantissa;
+    BigTensor _c_exponent = *this->exponent + *other.exponent;
+    BigTensor _c_sign = *this->sign + *other.sign;
+    return HPTensor(_c_mantissa, _c_exponent, _c_sign);
+  }
+
+  void normalize() {
+    BigTensor mantis_clz = this->mantissa->clz_gpu();
+    this->exponent->sub_gpu(mantis_clz);
+    this->mantissa->shift_gpu_inplace(mantis_clz);
+  }
 };

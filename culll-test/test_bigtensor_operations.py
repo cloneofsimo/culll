@@ -19,6 +19,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 BASE = 16
+NBITS = 100
 
 
 def _get_numbers(n, positive=True, base=BASE, mag=-1):
@@ -42,14 +43,14 @@ def _get_numbers(n, positive=True, base=BASE, mag=-1):
     return a
 
 
-def _get_pair_numbers(n=100, positive=False):
+def _get_pair_numbers(n: int, positive: bool = False):
 
     a, b = _get_numbers(n, positive=positive), _get_numbers(n, positive=positive)
 
     return a, b
 
 
-def _npvec2int(L, base=10):
+def _npvec2int(L, base=NBITS):
     # L = L.tolist()
     return sum([int(base**i) * int(L[i]) for i in range(len(L))])
 
@@ -88,12 +89,9 @@ def test_add():
 
 
 def test_mult():
-    a, b = _get_pair_numbers(10)
-    a, b = a.zero_pad_gpu(12), b.zero_pad_gpu(12)  # make sure they are the same size
-    # print(a.at_index(0, 0, 0))
-    # print(b.at_index(0, 0, 0))
+    a, b = _get_pair_numbers(NBITS)
+    a, b = a.zero_pad_gpu(NBITS + 2), b.zero_pad_gpu(NBITS + 2)
     c = a.mult_gpu(b)
-    # print(c.at_index(0, 0, 0))
 
     assert get_val(c, 0, 0, 0) == get_val(a, 0, 0, 0) * get_val(
         b, 0, 0, 0
@@ -101,7 +99,7 @@ def test_mult():
 
 
 def test_copy():
-    a, b = _get_pair_numbers(10)
+    a, b = _get_pair_numbers(NBITS)
     c = a.copy()
 
     assert get_val(c, 0, 0, 0) == get_val(a, 0, 0, 0)
@@ -109,14 +107,14 @@ def test_copy():
 
 def test_binary():
 
-    a, b = _get_pair_numbers(10, positive=True)
+    a, b = _get_pair_numbers(NBITS, positive=True)
     a_b = a.as_binary()
 
     assert val(a, BASE) == val(a_b, 2)
 
 
 def test_clz_gpu():
-    a, b = _get_pair_numbers(10, positive=True)
+    a, b = _get_pair_numbers(NBITS, positive=True)
 
     c, d = a.clz_gpu(), b.clz_gpu()
 
@@ -133,25 +131,25 @@ def test_clz_gpu():
 
 def test_right_shift_clz_inplace():
 
-    a, b = _get_pair_numbers(10, positive=False)
+    a, b = _get_pair_numbers(NBITS, positive=False)
     z1 = uval(a)
     a_clz = a.clz_gpu()
 
     a.shift_gpu_inplace(a_clz)
     z2 = uval(a)
 
-    assert z2 >= (BASE**10) // 2, f"{z2} < {BASE ** 10} // 2"
+    assert z2 >= (BASE**NBITS) // 2, f"{z2} < {BASE ** NBITS} // 2"
     assert z2 == z1 * (2 ** val(a_clz)), f"{z2} != {z1} * {2 ** val(a_clz)}"
 
 
 def test_left_shift():
 
-    a, _ = _get_pair_numbers(10, positive=False)
+    a, _ = _get_pair_numbers(NBITS, positive=False)
 
     z1_list = a.as_binary().at_index(0, 0, 0)
 
-    move_amount = _get_numbers(1, positive=False, base=65536, mag=7)
-
+    move_amount = _get_numbers(1, positive=True, base=65536, mag=10)
+    move_amount.negate_gpu_inplace()
     a.shift_gpu_inplace(move_amount)
     # print(a.as_binary().at_index(0, 0, 0))
     z2_list = a.as_binary().at_index(0, 0, 0)
@@ -166,7 +164,7 @@ def test_left_shift():
 
 
 def test_div_gpu():
-    a, b = _get_pair_numbers(10, positive=True)
+    a, b = _get_pair_numbers(NBITS, positive=True)
 
 
 if __name__ == "__main__":

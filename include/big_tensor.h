@@ -249,6 +249,10 @@ class BigTensor {
     return tmp;
   }
 
+  BigTensor sub_gpu(BigTensor a) {
+    BigTensor tmp = a.negate_gpu();
+    return this->add_gpu(tmp);
+  }
   void shift_gpu_inplace(BigTensor move_amount) {
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
@@ -325,4 +329,11 @@ class BigTensor {
         this->cuda_data, tmp.cuda_data, B, N, M, n, this->logbase);
     return tmp;
   }
+
+  BigTensor operator+(BigTensor a) { return this->add_gpu(a); }
+  BigTensor operator-(BigTensor a) {
+    BigTensor tmp = a.negate_gpu();
+    return this->add_gpu(tmp);
+  }
+  BigTensor operator*(BigTensor a) { return this->mult_gpu(a); }
 };

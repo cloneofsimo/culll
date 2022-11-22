@@ -12,20 +12,32 @@ BigTensor.shift_gpu_inplace
 
 from culll import BigTensor
 import numpy as np
+import os
+import math
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 BASE = 16
 
 
-def _get_numbers(n, positive=True):
+def _get_numbers(n, positive=True, base=BASE, mag=-1):
     B, N, M, n = 2, 2, 2, n
 
-    a = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
+    a = np.random.randint(low=0, high=base, size=(B, N, M, n)).astype(np.uint32)
     if positive:
         a[:, :, :, -1] = np.random.randint(
-            low=0, high=BASE // 2, size=(B, N, M)
+            low=0, high=base // 2, size=(B, N, M)
         ).astype(np.uint32)
 
-    a = BigTensor(a, BASE)
+    if mag > 0:
+        start_idx = math.ceil(math.log(mag, base))
+        a[:, :, :, :] = 0
+        a[:, :, :, :] = np.random.randint(low=0, high=mag, size=(B, N, M, n)).astype(
+            np.uint32
+        )
+
+    a = BigTensor(a, base)
 
     return a
 
@@ -57,6 +69,13 @@ def get_val(a: BigTensor, i, j, k, base=-1):
 
 def val(a: BigTensor, base=-1):
     return get_val(a, 0, 0, 0, base)
+
+
+def uval(a: BigTensor, base=-1):
+    if base == -1:
+        base = a.base
+    L = a.at_index(0, 0, 0)
+    return _npvec2int(L, base)
 
 
 def test_add():
@@ -112,22 +131,38 @@ def test_clz_gpu():
             break
 
 
-def test_shift_gpu_inplace():
+def test_right_shift_clz_inplace():
 
-    a, b = _get_pair_numbers(10, positive=True)
-    print(a.as_binary().at_index(0, 0, 0))
+    a, b = _get_pair_numbers(10, positive=False)
+    z1 = uval(a)
     a_clz = a.clz_gpu()
-    print(
-        a.size(),
-        a_clz.size(),
-    )
-    print(a.logbase, a.base)
-    print(a_clz.base, a_clz.logbase)
-    print(val(a_clz))
 
     a.shift_gpu_inplace(a_clz)
+    z2 = uval(a)
 
-    print(a.as_binary().at_index(0, 0, 0))
+    assert z2 >= (BASE**10) // 2, f"{z2} < {BASE ** 10} // 2"
+    assert z2 == z1 * (2 ** val(a_clz)), f"{z2} != {z1} * {2 ** val(a_clz)}"
+
+
+def test_left_shift():
+
+    a, _ = _get_pair_numbers(10, positive=False)
+
+    z1_list = a.as_binary().at_index(0, 0, 0)
+
+    move_amount = _get_numbers(1, positive=False, base=65536, mag=7)
+
+    a.shift_gpu_inplace(move_amount)
+    # print(a.as_binary().at_index(0, 0, 0))
+    z2_list = a.as_binary().at_index(0, 0, 0)
+    shift_amount = val(move_amount)
+
+    if shift_amount == 0:
+        assert z2_list == z1_list, f"{z2_list} != {z1_list}"
+    else:
+        assert (
+            z2_list[:shift_amount] == z1_list[-shift_amount:]
+        ), f"{z2_list, z1_list}, {shift_amount}"
 
 
 def test_div_gpu():
@@ -141,4 +176,5 @@ if __name__ == "__main__":
     test_clz_gpu()
     test_div_gpu()
     test_binary()
-    test_shift_gpu_inplace()
+    test_right_shift_clz_inplace()
+    test_left_shift()

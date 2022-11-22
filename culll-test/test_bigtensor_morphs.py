@@ -1,4 +1,4 @@
-'''
+"""
 Tests the following functions
 
 BigTensor.redigit_gpu
@@ -17,4 +17,4 @@ BigTensor.reshape_gpu_inplace
 
 BigTensor.transpose_gpu
 BigTensor.transpose_gpu_inplace
-'''
+"""

@@ -255,7 +255,7 @@ class BigTensor {
 
     batchBigTensorKernelShift<<<dimGrid, dimBlock>>>(
         this->cuda_data, move_amount.cuda_data, this->B, this->N, this->M,
-        this->n, this->logbase, this->base);
+        this->n, this->logbase, move_amount.base);
     return;
   }
 
@@ -263,7 +263,7 @@ class BigTensor {
     // assume that the value is unsigned, find amount of shift appropriately
     // to make all values fall in range between [base /2, base)
 
-    BigTensor moved_amount = BigTensor(this->B, this->N, this->M, 1, 1 << 31);
+    BigTensor moved_amount(this->B, this->N, this->M, 1, 1 << 16);
 
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);

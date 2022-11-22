@@ -4,6 +4,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <iostream>
 #include <string>
 
 using lint = unsigned int;
@@ -69,7 +70,7 @@ __global__ void batchBigTensorKernelZeroPad(lint *batched_data_a, lint *output,
 
 __global__ void batchBigTensorKernelShift(lint *batched_data_man, lint *amount,
                                           lint B, lint N, lint M, lint n,
-                                          lint logbase, lint base);
+                                          lint logbase, lint lmax);
 
 __global__ void batchBigTensorKernelCLZ(lint *batched_data_man,
                                         lint *amount_out, lint B, lint N,

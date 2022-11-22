@@ -13,22 +13,23 @@
 /// @return
 __global__ void batchBigTensorKernelShift(lint* batched_data_man, lint* amount,
                                           lint B, lint N, lint M, lint n,
-                                          lint logbase, lint base) {
+                                          lint logbase, lint lmax) {
   int batch_idx = blockIdx.x * blockDim.x + threadIdx.x;
   int row_idx = blockIdx.y * blockDim.y + threadIdx.y;
   int col_idx = blockIdx.z * blockDim.z + threadIdx.z;
 
   int pos = batch_idx * N * M + row_idx * M + col_idx;
-  int is_leftshift = (amount[pos] >= base / 2) ? 1 : 0;
-  int amount_abs = (is_leftshift) ? base - amount[pos] : amount[pos];
+  int is_leftshift = (amount[pos] >= lmax / 2) ? 1 : 0;
+  int amount_abs = (is_leftshift) ? lmax - amount[pos] : amount[pos];
 
   int shiftamount_blk = amount_abs / logbase;
   int shiftamount_rem = amount_abs % logbase;
 
   int pos2 = batch_idx * N * M * n + row_idx * M * n + col_idx * n;
+  lint _base = 1 << logbase;
 
   if (batch_idx < B && row_idx < N && col_idx < M) {
-    if (is_leftshift) {
+    if (!is_leftshift) {
       for (int i = n - shiftamount_blk - 1; i >= 1; i--) {
         batched_data_man[pos2 + shiftamount_blk + i] =
             (batched_data_man[pos2 + i] << shiftamount_rem) +
@@ -36,15 +37,24 @@ __global__ void batchBigTensorKernelShift(lint* batched_data_man, lint* amount,
       }
       batched_data_man[pos2 + shiftamount_blk] = batched_data_man[pos2]
                                                  << shiftamount_rem;
+      for (int i = 0; i < shiftamount_blk; i++) {
+        batched_data_man[pos2 + i] = 0;
+      }
     } else {
       for (int i = 0; i < n - shiftamount_blk - 1; i++) {
         batched_data_man[pos2 + i] =
             (batched_data_man[pos2 + i + shiftamount_blk] >> shiftamount_rem) +
-            (batched_data_man[pos2 + i + shiftamount_blk + 1] >>
-             (logbase - shiftamount_rem));
+            (batched_data_man[pos2 + i + shiftamount_blk + 1]
+             << (logbase - shiftamount_rem));
       }
       batched_data_man[pos2 + n - shiftamount_blk - 1] =
           batched_data_man[pos2 + n - 1] >> shiftamount_rem;
+      for (int i = 0; i < shiftamount_blk; i++) {
+        batched_data_man[pos2 + n - 1 - i] = 0;
+      }
+    }
+    for (int i = 0; i < n; i++) {
+      batched_data_man[pos2 + i] %= _base;
     }
   }
 }

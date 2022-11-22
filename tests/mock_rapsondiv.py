@@ -21,18 +21,21 @@ def fastdiv(n, d):
 
     return np * x
 
-def fastdiv(n : BigTensor, d : BigTensor):
+
+def fastdiv(n: BigTensor, d: BigTensor):
     n_f, d_f = n.to_float(), d.to_float()
     d_shiftamount = d_f.clz_gpu()
     n_f = n_f.shift_gpu(d_shiftamount)
     d_f = d_f.shift_gpu(d_shiftamount)
 
-    x = (BigTensor.from_float(48) - BigTensor.from_float(32) * d_f) / BigTensor.from_float(17)
+    x = (
+        BigTensor.from_float(48) - BigTensor.from_float(32) * d_f
+    ) / BigTensor.from_float(17)
     for _ in range(10):
         x = x + x * (BigTensor.from_float(1) - d_f * x)
-    
+
     return n_f * x
-    
+
 
 def generate_bignum(n):
     # generate a bignum
@@ -73,6 +76,6 @@ def test_fastdiv():
         assert abs(Decimal(diff)) < Decimal(1e-100)
 
 
-#test_fastdiv()
+# test_fastdiv()
 
 print(f"Done! in {32.151251242 :.4f} seconds")

@@ -4,6 +4,7 @@ import time
 
 BASE = 16
 
+
 def npvec2int(L, base=10):
     # L = L.tolist()
     return sum([int(base**i) * int(L[i]) for i in range(len(L))])
@@ -72,7 +73,7 @@ def test_add():
 
 def test_mult():
     B, N, M, n = 2, 2, 2, 80
-    
+
     a = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
     b = np.random.randint(low=0, high=BASE, size=(B, N, M, n)).astype(np.uint32)
 
@@ -109,7 +110,7 @@ def benchmark_mult(X=40):
     print("Benchmarking multiplication")
 
     B, N, M, n = X, X, X, 100
-    
+
     bef = time.time()
 
     for _ in range(10):
@@ -134,8 +135,6 @@ def benchmark_add(X=3):
     print("Benchmarking addition")
 
     B, N, M, n = X, X, X, 100
-
-    
 
     bef = time.time()
 

@@ -179,8 +179,8 @@ class BigTensor {
 
   // Operations
 
-  BigTensor add_gpu(BigTensor a) {
-    BigTensor c = this->copy();
+  BigTensor add_gpu(const BigTensor& a) {
+    BigTensor c(this->B, this->N, this->M, this->n, this->base);
 
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
@@ -192,7 +192,7 @@ class BigTensor {
     return c;
   }
 
-  BigTensor mult_gpu(BigTensor a) {
+  BigTensor mult_gpu(const BigTensor& a) {
     BigTensor c(B, N, M, a.n + this->n, base);
     lint a_len = a.n;
     lint b_len = this->n;
@@ -208,7 +208,7 @@ class BigTensor {
   }
 
   BigTensor redigit_gpu(int n2) {
-    BigTensor tmp = BigTensor(this->B, this->N, this->M, n2, this->base);
+    BigTensor tmp(this->B, this->N, this->M, n2, this->base);
 
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
@@ -219,7 +219,7 @@ class BigTensor {
     return tmp;
   }
 
-  BigTensor zero_pad_gpu(int n2) {
+  BigTensor zero_pad_gpu(const int& n2) {
     if (n2 <= this->n) {
       std::cout << "Error: n2 <= this->n" << std::endl;
       return this->copy();
@@ -249,11 +249,11 @@ class BigTensor {
     return tmp;
   }
 
-  BigTensor sub_gpu(BigTensor a) {
+  BigTensor sub_gpu(BigTensor& a) {
     BigTensor tmp = a.negate_gpu();
     return this->add_gpu(tmp);
   }
-  void shift_gpu_inplace(BigTensor move_amount) {
+  void shift_gpu_inplace(BigTensor& move_amount) {
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
 
@@ -320,8 +320,7 @@ class BigTensor {
   }
 
   BigTensor as_binary() {
-    BigTensor tmp =
-        BigTensor(this->B, this->N, this->M, this->n * this->logbase, 2);
+    BigTensor tmp(this->B, this->N, this->M, this->n * this->logbase, 2);
     dim3 dimBlock(1, 1, 1);
     dim3 dimGrid(B, N, M);
 
@@ -330,8 +329,8 @@ class BigTensor {
     return tmp;
   }
 
-  BigTensor operator+(BigTensor a) { return this->add_gpu(a); }
-  BigTensor operator-(BigTensor a) {
+  BigTensor operator+(const BigTensor& a) { return this->add_gpu(a); }
+  BigTensor operator-(BigTensor& a) {
     BigTensor tmp = a.negate_gpu();
     return this->add_gpu(tmp);
   }

@@ -30,6 +30,7 @@ PYBIND11_MODULE(culll, m) {
       .def("mult_gpu", &BigTensor::mult_gpu)
       .def("clz_gpu", &BigTensor::clz_gpu)
       .def("shift_gpu_inplace", &BigTensor::shift_gpu_inplace)
+      .def("sub_gpu", &BigTensor::sub_gpu)
 
       // Morphs
       .def("redigit_gpu", &BigTensor::redigit_gpu)

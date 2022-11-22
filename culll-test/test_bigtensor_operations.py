@@ -81,11 +81,20 @@ def uval(a: BigTensor, base=-1):
 
 def test_add():
     # test signed operations
-    a, b = _get_pair_numbers(20)
-    a, b = a.zero_pad_gpu(22), b.zero_pad_gpu(22)  # make sure they are the same size
+    a, b = _get_pair_numbers(NBITS)
+    a, b = a.zero_pad_gpu(NBITS + 2), b.zero_pad_gpu(NBITS + 2)
     c = a.add_gpu(b)
 
     assert get_val(c, 0, 0, 0) == get_val(a, 0, 0, 0) + get_val(b, 0, 0, 0)
+
+
+def test_sub():
+    # test signed operations
+    a, b = _get_pair_numbers(NBITS)
+    a, b = a.zero_pad_gpu(NBITS + 2), b.zero_pad_gpu(NBITS + 2)
+    c = a.sub_gpu(b)
+
+    assert get_val(c, 0, 0, 0) == get_val(a, 0, 0, 0) - get_val(b, 0, 0, 0)
 
 
 def test_mult():
@@ -169,6 +178,7 @@ def test_div_gpu():
 
 if __name__ == "__main__":
     test_add()
+    test_sub()
     test_mult()
     test_copy()
     test_clz_gpu()
